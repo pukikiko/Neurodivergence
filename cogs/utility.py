@@ -5,6 +5,7 @@ import aiohttp
 from bs4 import BeautifulSoup
 import re
 import os
+import urllib.parse
 
 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:133.0) Gecko/20100101 Firefox/133.0'}
 
@@ -212,5 +213,45 @@ class Utility(commands.Cog, name="utility"):
             embed.add_field(name=f"{module} - {bssid}", value=f"[{latitude}, {longitude}]({location_url})", inline=False)
         await msg.edit(embed=embed)
          
+    @commands.hybrid_command(
+        name="ppsearch",
+        description="Reverse search a phone number to see if it's a payphone.",
+    )
+    async def ppsearch(self, ctx, phone_number="0429510007"):
+        embed = discord.Embed(title=f"Payphone Search - {phone_number}", description="Please wait...")
+        msg = await ctx.reply(embed=embed)
+
+        async with aiohttp.ClientSession() as session:
+            encoded = urllib.parse.quote_plus(phone_number)
+            url = f"http://telstratools.sn.mfc.pw/api/search?cli={encoded}"
+            async with session.get(url) as response:
+                if response.status != 200:
+                    embed = discord.Embed(title=f"Payphone Search - {phone_number}", description=f"Error fetching payphone API ({response.status})")
+                    await msg.edit(embed=embed)
+                    return
+                try:
+                    data = await response.json()
+                except Exception:
+                    embed = discord.Embed(title=f"Payphone Search - {phone_number}", description="Error parsing API response.")
+                    await msg.edit(embed=embed)
+                    return
+
+        # Process response
+        if not isinstance(data, dict):
+            embed = discord.Embed(title=f"Payphone Search - {phone_number}", description="Unexpected API response format.")
+            await msg.edit(embed=embed)
+            return
+
+        if data.get("found"):
+            item = data.get("item", {})
+            cli = item.get("cli") or "N/A"
+            address = item.get("address") or "N/A"
+
+            embed = discord.Embed(title=f"Payphone Search - {cli}", description=f"Address: {address}")
+        else:
+            embed = discord.Embed(title=f"Payphone Search - {phone_number}", description="Not a payphone.")
+
+        await msg.edit(embed=embed)
+
 async def setup(bot) -> None:
     await bot.add_cog(Utility(bot))

@@ -1,0 +1,13 @@
+[2026-01-09 17:29:06] [INFO    ] Neurodivergence: Logged in as Neurodivergence NG
+[2026-01-09 17:29:06] [INFO    ] Neurodivergence: discord.py API version: 2.6.4
+[2026-01-09 17:29:06] [INFO    ] Neurodivergence: Python version: 3.13.11
+[2026-01-09 17:29:06] [INFO    ] Neurodivergence: Running on: Linux 6.18.2-zen2-1-zen (posix)
+[2026-01-09 17:29:06] [INFO    ] Neurodivergence: -------------------
+[2026-01-09 17:29:06] [INFO    ] Neurodivergence: Loaded extension 'sidepipe'
+[2026-01-09 17:29:06] [ERROR   ] Neurodivergence: Failed to load extension ai
+ExtensionFailed: Extension 'cogs.ai' raised an error: KeyError: 'AUTO1111_HOSTS'
+[2026-01-09 17:29:06] [INFO    ] Neurodivergence: Loaded extension 'general'
+[2026-01-09 17:29:06] [INFO    ] Neurodivergence: Loaded extension 'moderation'
+[2026-01-09 17:29:06] [INFO    ] Neurodivergence: Loaded extension 'owner'
+[2026-01-09 17:29:06] [INFO    ] Neurodivergence: Loaded extension 'utility'
+[2026-01-09 17:29:06] [INFO    ] Neurodivergence: Loaded extension 'fun'

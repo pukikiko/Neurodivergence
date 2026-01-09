@@ -95,5 +95,41 @@ class Fun(commands.Cog, name="fun"):
                     embed = discord.Embed(title="Random CCTV", description="No cameras found on this page.")
                     await msg.edit(embed=embed)
 
+    @commands.hybrid_command(
+        name="redorblack",
+        description="Use a quantum number generator to decide whether you should pick red or black.",
+    )
+    async def redorblack(self, ctx):
+        embed = discord.Embed(title="Red or Black?", description="Please wait...")
+        msg = await ctx.reply(embed=embed)
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get("http://qrng.anu.edu.au/API/jsonI.php?length=1&type=uint8") as response:
+                if response.status != 200:
+                    embed = discord.Embed(title="Red or Black?", description=f"Error fetching quantum number ({response.status})")
+                    await msg.edit(embed=embed)
+                    return
+                try:
+                    payload = await response.json()
+                    num = None
+                    if isinstance(payload, dict):
+                        data = payload.get("data")
+                        if isinstance(data, list) and len(data) > 0:
+                            num = data[0]
+                except Exception:
+                    embed = discord.Embed(title="Red or Black?", description="Error parsing QRNG response.")
+                    await msg.edit(embed=embed)
+                    return
+
+                if num is None:
+                    embed = discord.Embed(title="Red or Black?", description="QRNG did not return a valid number.")
+                    await msg.edit(embed=embed)
+                    return
+
+                # uint8 ranges 0-255; >127 -> pick black, else pick red
+                pick = "black" if num > 127 else "red"
+                embed = discord.Embed(title="Red or Black?", description=f"Pick **{pick.upper()}**!")
+                await msg.edit(embed=embed)
+
 async def setup(bot) -> None:
     await bot.add_cog(Fun(bot))
