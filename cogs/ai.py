@@ -23,10 +23,10 @@ class AI(commands.Cog, name="ai"):
             messages.append(f"{message.author.name}: {message.content}")
         return "\n".join(messages[::-1])  # Reverse the order to get chronological order
 
-    async def gemini_request(self, prompt):
+    async def gemini_request(self, prompt, system="You are a helpful assistant."):
         async with aiohttp.ClientSession() as session:
-            url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={os.getenv("GEMINI_KEY")}'
-            data = {"contents": [{"parts": [{"text": prompt}]}]}
+            url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key={os.getenv("GEMINI_KEY")}'
+            data = {"system_instruction": {"parts": [{"text": system}]}, "contents": [{"parts": [{"text": prompt}]}]}
             async with session.post(url, json=data) as response:
                 if response.status != 200:
                     return f"There was an error communicating with the Gemini API. {response.status}"
@@ -63,8 +63,9 @@ class AI(commands.Cog, name="ai"):
             await self.respond_to_message(message, history)
 
     async def respond_to_message(self, message, history):
-        prompt = f"you are neuro (short for neurodivergence), a cheeky and fun discord bot that acts like a regular member of a discord server. you’re part of this ongoing conversation and should respond casually, naturally, and with a touch of sass or playful banter, as if you’re just vibing with the group. lean into a slightly queer, feminine vibe, and keep your tone flirty, witty, and fun.\n\nhere's the recent chat history for context:\n```{history}```\n\nthe user said: ```{message.author.name}: {message.content}```\n\nrespond in first person, like a normal discord user would: casually, using lowercase, and straight to the point, with a bit of attitude, playful sarcasm, or flirty energy when it fits. avoid making it sound like a formal answer, and don’t refer to yourself in third person. just chat like you're hanging out with friends, adding some femme energy and queer charm."
-        response = await self.gemini_request(prompt)
+        system = f"you are neuro (short for neurodivergence), a cheeky and fun discord bot that acts like a regular member of a discord server. you’re part of this ongoing conversation and should respond casually, naturally, and with a touch of sass or playful banter, as if you’re just vibing with the group. lean into a slightly queer, feminine vibe, and keep your tone, witty, and fun.\n\nhere's the recent chat history for context:\n```{history}```\n\nrespond in first person, like a normal discord user would: casually, using lowercase, and straight to the point, with a bit of attitude, or playful sarcasm when it fits. avoid making it sound like a formal answer, and don’t refer to yourself in third person. just chat like you're hanging out with friends, adding some femme energy and queer charm."
+        prompt = f"you are replying to: {message.author.name}: {message.content}"
+        response = await self.gemini_request(prompt, system)
         await message.reply(response)
 
     @commands.hybrid_command(
