@@ -197,7 +197,10 @@ class Utility(commands.Cog, name="utility"):
                 geowifi_json = await response.json()
 
         embed = discord.Embed(title=f"Wifi Geolocation - {bssid} {ssid}")
+        count = 0
         for item in geowifi_json:
+            if count == 25:
+                break
             if not all(key in item for key in ["bssid", "latitude", "longitude", "module"]):
                 continue  # Skip entries with missing data
 
@@ -208,9 +211,10 @@ class Utility(commands.Cog, name="utility"):
             location_url = f"https://www.google.com/maps/search/?q={latitude},{longitude}"
             ssid = item.get("ssid", None)  # Get ssid if available
             if ssid:
-                ssid_truncated = ssid[:7] + '...' if len(ssid) > 10 else ssid
-                embed.add_field(name=f"{module} - {bssid} - {ssid_truncated}", value=f"[{latitude}, {longitude}]({location_url})", inline=False)
+                count += 1
+                embed.add_field(name=f"{module} - {bssid} - {ssid}", value=f"[{latitude}, {longitude}]({location_url})", inline=False)
                 continue
+            count += 1
             embed.add_field(name=f"{module} - {bssid}", value=f"[{latitude}, {longitude}]({location_url})", inline=False)
         await msg.edit(embed=embed)
          
