@@ -17,6 +17,56 @@ class AI(commands.Cog, name="ai"):
     def __init__(self, bot) -> None:
         self.bot = bot
 
+    async def get_channel_history(self, channel, limit=100):
+        messages = []
+        async for message in channel.history(limit=limit):
+            messages.append(f"{message.author.name}: {message.content}")
+        return "\n".join(messages[::-1])  # Reverse the order to get chronological order
+
+    async def gemini_request(self, prompt):
+        async with aiohttp.ClientSession() as session:
+            url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={os.getenv("GEMINI_KEY")}'
+            data = {"contents": [{"parts": [{"text": prompt}]}]}
+            async with session.post(url, json=data) as response:
+                if response.status != 200:
+                    return f"There was an error communicating with the Gemini API. {response.status}"
+                gemini_json = await response.json()
+                return gemini_json["candidates"][0]["content"]["parts"][0]["text"]
+
+    @commands.hybrid_command(
+        name="gemini",
+        description="Talk to the Google Gemini AI",
+    )
+    async def gemini(self, ctx, prompt="Give me a short description of yourself."):
+        embed = discord.Embed(title="Gemini", description="Please wait...")
+        msg = await ctx.reply(embed=embed)
+
+        # Get channel history
+        history = await self.get_channel_history(ctx.channel)
+                
+        response = await self.gemini_request(prompt)
+
+        embed = discord.Embed(title="Gemini", description=response)
+        await msg.edit(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author.bot:
+            return
+
+        history = await self.get_channel_history(message.channel)
+        
+        # Check for keywords
+        if "neuro" in message.content.lower() or "neurodivergence" in message.content.lower():
+            await self.respond_to_message(message, history)
+        elif random.random() < 0.05:  # 5% chance
+            await self.respond_to_message(message, history)
+
+    async def respond_to_message(self, message, history):
+        prompt = f"you are neuro (short for neurodivergence), a cheeky and fun discord bot that acts like a regular member of a discord server. you’re part of this ongoing conversation and should respond casually, naturally, and with a touch of sass or playful banter, as if you’re just vibing with the group. lean into a slightly queer, feminine vibe, and keep your tone flirty, witty, and fun.\n\nhere's the recent chat history for context:\n```{history}```\n\nthe user said: ```{message.author.name}: {message.content}```\n\nrespond in first person, like a normal discord user would: casually, using lowercase, and straight to the point, with a bit of attitude, playful sarcasm, or flirty energy when it fits. avoid making it sound like a formal answer, and don’t refer to yourself in third person. just chat like you're hanging out with friends, adding some femme energy and queer charm."
+        response = await self.gemini_request(prompt)
+        await message.reply(response)
+
     @commands.hybrid_command(
         name="wizard",
         description="Talk to the Wizard Vicuna AI",
