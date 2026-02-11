@@ -60,7 +60,7 @@ MODES = {
 
 ALL_MARKERS = [m["marker"] for m in MODES.values()]
 
-class Morph(commands.Cog, name="morph"):
+class Become(commands.Cog, name="become"):
     def __init__(self, bot) -> None:
         self.bot = bot
         self.morphed_channels = {}
@@ -84,7 +84,7 @@ class Morph(commands.Cog, name="morph"):
         target = MODES[mode]["target"]
         new_embed = discord.Embed(
             title=await self.translate(embed.title, target) if embed.title else embed.title,
-            description=(await self.translate(embed.description, target) + marker) if embed.description else embed.description,
+            description=await self.translate(embed.description, target) if embed.description else embed.description,
             color=embed.color,
         )
         for field in embed.fields:
@@ -93,15 +93,16 @@ class Morph(commands.Cog, name="morph"):
                 value=await self.translate(field.value, target),
                 inline=field.inline,
             )
+        new_embed.set_footer(text=f"i'm {mode}{marker}")
         return new_embed
 
     def is_already_translated(self, message):
         for marker in ALL_MARKERS:
             if message.content and message.content.endswith(marker):
                 return True
-            for embed in message.embeds:
-                if embed.description and embed.description.endswith(marker):
-                    return True
+        for embed in message.embeds:
+            if embed.footer and embed.footer.text and embed.footer.text.startswith("i'm "):
+                return True
         return False
 
     @commands.Cog.listener()
@@ -127,8 +128,8 @@ class Morph(commands.Cog, name="morph"):
     async def translate_message(self, message):
         try:
             mode = self.morphed_channels[message.channel.id]
-            marker = MODES[mode]["marker"]
             target = MODES[mode]["target"]
+            marker = MODES[mode]["marker"]
             new_content = None
             if message.content:
                 new_content = await self.translate(message.content, target) + marker
@@ -147,33 +148,33 @@ class Morph(commands.Cog, name="morph"):
         return choices[:25]
 
     @commands.hybrid_command(
-        name="morph",
-        description="morph the bot's language in this channel",
+        name="become",
+        description="become a language in this channel",
     )
     @app_commands.autocomplete(mode=mode_autocomplete)
-    async def morph(self, ctx, mode: str):
+    async def become(self, ctx, mode: str):
         mode = mode.lower()
         if mode == "neuro":
             self.morphed_channels.pop(ctx.channel.id, None)
-            embed = discord.Embed(title="morph OFF", description="back to normal neuro brain")
+            embed = discord.Embed(title="become OFF", description="back to normal neuro brain")
             await ctx.reply(embed=embed)
         elif mode in MODES:
             self.morphed_channels[ctx.channel.id] = mode
             marker = MODES[mode]["marker"]
-            embed = discord.Embed(title=f"morph → {mode}{marker}", description=f"all bot responses in this channel will now be {mode}")
+            embed = discord.Embed(title=f"become → {mode}{marker}", description=f"all bot responses in this channel will now be {mode}")
             await ctx.reply(embed=embed)
         else:
-            embed = discord.Embed(title="morph failed", description=f"'{mode}' isn't a language dummy")
+            embed = discord.Embed(title="become failed", description=f"'{mode}' isn't a language dummy")
             await ctx.reply(embed=embed)
 
     @commands.hybrid_command(
-        name="morphlist",
-        description="list all available morph languages",
+        name="becomelist",
+        description="list all available languages to become",
     )
-    async def morphlist(self, ctx):
+    async def becomelist(self, ctx):
         lines = [f"{MODES[name]['marker'].strip()} {name.title()}" for name in sorted(MODES.keys())]
-        embed = discord.Embed(title="morph languages", description="\n".join(lines))
+        embed = discord.Embed(title="become languages", description="\n".join(lines))
         await ctx.reply(embed=embed)
 
 async def setup(bot) -> None:
-    await bot.add_cog(Morph(bot))
+    await bot.add_cog(Become(bot))
