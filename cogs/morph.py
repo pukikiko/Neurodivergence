@@ -8,8 +8,54 @@ import os
 libretranslate_url = os.environ.get("LIBRETRANSLATE_URL", "http://localhost:5000")
 
 MODES = {
+    "arabic": {"target": "ar", "marker": " 🇸🇦"},
+    "azerbaijani": {"target": "az", "marker": " 🇦🇿"},
+    "bengali": {"target": "bn", "marker": " 🇧🇩"},
+    "bulgarian": {"target": "bg", "marker": " 🇧🇬"},
+    "catalan": {"target": "ca", "marker": " 🏴"},
     "chinese": {"target": "zh", "marker": " 🇨🇳"},
+    "chinese (traditional)": {"target": "zt", "marker": " 🇹🇼"},
+    "czech": {"target": "cs", "marker": " 🇨🇿"},
+    "danish": {"target": "da", "marker": " 🇩🇰"},
+    "dutch": {"target": "nl", "marker": " 🇳🇱"},
+    "esperanto": {"target": "eo", "marker": " 🟢"},
+    "estonian": {"target": "et", "marker": " 🇪🇪"},
+    "finnish": {"target": "fi", "marker": " 🇫🇮"},
+    "french": {"target": "fr", "marker": " 🇫🇷"},
+    "galician": {"target": "gl", "marker": " 🏴"},
+    "german": {"target": "de", "marker": " 🇩🇪"},
+    "greek": {"target": "el", "marker": " 🇬🇷"},
+    "hebrew": {"target": "he", "marker": " 🇮🇱"},
+    "hindi": {"target": "hi", "marker": " 🇮🇳"},
+    "hungarian": {"target": "hu", "marker": " 🇭🇺"},
+    "indonesian": {"target": "id", "marker": " 🇮🇩"},
+    "irish": {"target": "ga", "marker": " 🇮🇪"},
+    "italian": {"target": "it", "marker": " 🇮🇹"},
     "japanese": {"target": "ja", "marker": " 🇯🇵"},
+    "korean": {"target": "ko", "marker": " 🇰🇷"},
+    "kyrgyz": {"target": "ky", "marker": " 🇰🇬"},
+    "latvian": {"target": "lv", "marker": " 🇱🇻"},
+    "lithuanian": {"target": "lt", "marker": " 🇱🇹"},
+    "malay": {"target": "ms", "marker": " 🇲🇾"},
+    "norwegian": {"target": "nb", "marker": " 🇳🇴"},
+    "persian": {"target": "fa", "marker": " 🇮🇷"},
+    "polish": {"target": "pl", "marker": " 🇵🇱"},
+    "portuguese": {"target": "pt", "marker": " 🇵🇹"},
+    "portuguese-brazil": {"target": "pb", "marker": " 🇧🇷"},
+    "romanian": {"target": "ro", "marker": " 🇷🇴"},
+    "russian": {"target": "ru", "marker": " 🇷🇺"},
+    "slovak": {"target": "sk", "marker": " 🇸🇰"},
+    "slovenian": {"target": "sl", "marker": " 🇸🇮"},
+    "spanish": {"target": "es", "marker": " 🇪🇸"},
+    "albanian": {"target": "sq", "marker": " 🇦🇱"},
+    "swedish": {"target": "sv", "marker": " 🇸🇪"},
+    "tagalog": {"target": "tl", "marker": " 🇵🇭"},
+    "thai": {"target": "th", "marker": " 🇹🇭"},
+    "turkish": {"target": "tr", "marker": " 🇹🇷"},
+    "ukrainian": {"target": "uk", "marker": " 🇺🇦"},
+    "urdu": {"target": "ur", "marker": " 🇵🇰"},
+    "vietnamese": {"target": "vi", "marker": " 🇻🇳"},
+    "basque": {"target": "eu", "marker": " 🏴"},
 }
 
 ALL_MARKERS = [m["marker"] for m in MODES.values()]
@@ -91,16 +137,22 @@ class Morph(commands.Cog, name="morph"):
         except Exception:
             pass
 
+    async def mode_autocomplete(self, interaction: discord.Interaction, current: str):
+        choices = [app_commands.Choice(name="Neuro (default)", value="neuro")]
+        choices += [
+            app_commands.Choice(name=f"{name.title()} {MODES[name]['marker'].strip()}", value=name)
+            for name in sorted(MODES.keys())
+            if current.lower() in name
+        ]
+        return choices[:25]
+
     @commands.hybrid_command(
         name="morph",
         description="morph the bot's language in this channel",
     )
-    @app_commands.choices(mode=[
-        app_commands.Choice(name="Chinese 🇨🇳", value="chinese"),
-        app_commands.Choice(name="Japanese 🇯🇵", value="japanese"),
-        app_commands.Choice(name="Neuro (default)", value="neuro"),
-    ])
+    @app_commands.autocomplete(mode=mode_autocomplete)
     async def morph(self, ctx, mode: str):
+        mode = mode.lower()
         if mode == "neuro":
             self.morphed_channels.pop(ctx.channel.id, None)
             embed = discord.Embed(title="morph OFF", description="back to normal neuro brain")
@@ -111,8 +163,17 @@ class Morph(commands.Cog, name="morph"):
             embed = discord.Embed(title=f"morph → {mode}{marker}", description=f"all bot responses in this channel will now be {mode}")
             await ctx.reply(embed=embed)
         else:
-            embed = discord.Embed(title="morph failed", description="pick chinese, japanese, or neuro dummy")
+            embed = discord.Embed(title="morph failed", description=f"'{mode}' isn't a language dummy")
             await ctx.reply(embed=embed)
+
+    @commands.hybrid_command(
+        name="morphlist",
+        description="list all available morph languages",
+    )
+    async def morphlist(self, ctx):
+        lines = [f"{MODES[name]['marker'].strip()} {name.title()}" for name in sorted(MODES.keys())]
+        embed = discord.Embed(title="morph languages", description="\n".join(lines))
+        await ctx.reply(embed=embed)
 
 async def setup(bot) -> None:
     await bot.add_cog(Morph(bot))

@@ -13,4 +13,4 @@ services:
     image: libretranslate/libretranslate
     restart: unless-stopped
     environment:
-      - LT_LOAD_ONLY=en,zh,ja
+      - LT_LOAD_ONLY=en,ar,az,bn,bg,ca,zh,zt,cs,da,nl,eo,et,fi,fr,gl,de,el,he,hi,hu,id,ga,it,ja,ko,ky,lv,lt,ms,nb,fa,pl,pt,pb,ro,ru,sk,sl,es,sq,sv,tl,th,tr,uk,ur,vi,eu
