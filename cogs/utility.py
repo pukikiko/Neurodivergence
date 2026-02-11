@@ -22,7 +22,7 @@ class Utility(commands.Cog, name="utility"):
         msg = await ctx.send(embed=embed)
 
         async with aiohttp.ClientSession() as session:
-            url = f"http://www.bom.gov.au/{state}/forecasts/{town}.shtml"
+            url = f"http://reg.bom.gov.au/{state}/forecasts/{town}.shtml"
             async with session.get(url, headers=headers) as response:
                 if response.status != 200:
                     embed = discord.Embed(title="Weather", description=f"Failed to retrieve weather. {response.status}")
