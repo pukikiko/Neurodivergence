@@ -154,28 +154,33 @@ class Utility(commands.Cog, name="utility"):
         name="rego",
         description="Check a vehicles registration (South Australia)",
     )
-    async def rego(self, ctx, plate="wgz422"):
+    async def rego(self, ctx, *, plate="wgz422"):
+        # Normalize plate: uppercase and remove all spaces
+        cleaned_plate = str(plate).strip().upper().replace(" ", "")
         embed = discord.Embed(title=f"Check Registration - {plate}", description="Please wait...")
         msg = await ctx.reply(embed=embed)
-
         async with aiohttp.ClientSession() as session:
             url = "https://account.ezyreg.sa.gov.au/r/veh/an/checkRegistration"
-            data = {"plateNumber": plate, "registrationType": "VEHICLE"}
+            data = {"plateNumber": cleaned_plate, "registrationType": "VEHICLE"}
             async with session.post(url, json=data) as response:
                 if response.status != 200:
                     embed = discord.Embed(title=f"Check Registration - {plate}", description="No results found.")
                     await msg.edit(embed=embed)
                     return
                 ezyreg_json = await response.json()
-
-        embed = discord.Embed(title=f"Check Registration - {plate}")
-        embed.add_field(name="Expiry Date", value=ezyreg_json["checkRegistrationDetails"][0]["expiryDate"], inline=False)
-        embed.add_field(name="Make", value=ezyreg_json["checkRegistrationDetails"][0]["vehicleMake"], inline=False)
-        embed.add_field(name="Body Type", value=ezyreg_json["checkRegistrationDetails"][0]["vehicleBodyType"], inline=False)
-        embed.add_field(name="Primary Colour", value=ezyreg_json["checkRegistrationDetails"][0]["primaryColour"], inline=False)
-        embed.add_field(name="CTP Insurer", value=ezyreg_json["checkRegistrationDetails"][0]["ctpInsurer"], inline=False)
-        embed.add_field(name="CTP Ins. Premium Class", value=ezyreg_json["checkRegistrationDetails"][0]["insuranceClass"], inline=False)
-        embed.add_field(name="VIN", value=ezyreg_json["checkRegistrationDetails"][0]["vinChassis"], inline=False)
+        if not ezyreg_json.get("checkRegistrationDetails") or not ezyreg_json["checkRegistrationDetails"]:
+            embed = discord.Embed(title=f"Check Registration - {plate}", description="No results found.")
+            await msg.edit(embed=embed)
+            return
+        details = ezyreg_json["checkRegistrationDetails"][0]
+        embed = discord.Embed(title=f"Check Registration - {plate}", color=discord.Color.blue())
+        embed.add_field(name="Make", value=details["vehicleMake"], inline=True)
+        embed.add_field(name="Body Type", value=details["vehicleBodyType"], inline=True)
+        embed.add_field(name="Primary Colour", value=details["primaryColour"], inline=True)
+        embed.add_field(name="Expiry Date", value=details["expiryDate"], inline=True)
+        embed.add_field(name="CTP Insurer", value=details["ctpInsurer"], inline=True)
+        embed.add_field(name="Insurance Class", value=details["insuranceClass"], inline=True)
+        embed.add_field(name="VIN", value=details["vinChassis"], inline=False)
         await msg.edit(embed=embed)
          
     @commands.hybrid_command(
