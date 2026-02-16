@@ -1,3 +1,39 @@
-# ignore the log :P
-discord.log
+# Environment and Configuration
 .env
+.env.local
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Logs
+discord.log
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.dockerignore
