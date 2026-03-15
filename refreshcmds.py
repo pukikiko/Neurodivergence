@@ -1,23 +1,22 @@
 #!/usr/bin/env python3
 """
-Refresh (sync) Discord application commands for this bot.
+刷新（同步）此机器人的 Discord 应用命令。
 
-Why this exists
+为什么需要这个
 ---------------
-This repo includes an owner-only `sync` command in `cogs/owner.py`, but sometimes you
-just want a simple script you can run locally/CI to sync the bot's slash commands.
+此仓库在 `cogs/owner.py` 中包含一个仅限所有者使用的 `sync` 命令，但有时你
+只是想要一个可以在本地/CI 中运行的简单脚本来同步机器人的斜杠命令。
 
-This script:
-- Loads `TOKEN` from `.env` in the repo root (no third-party dotenv dependency).
-- Ensures sane defaults for env vars that are accessed at import-time by some cogs.
-- Loads all cogs from `./cogs` so `@commands.hybrid_command(...)` commands register.
-- Syncs application commands either globally or to a specific guild.
+此脚本：
+- 从仓库根目录的 `.env` 加载 `TOKEN`（无需第三方 dotenv 依赖）。
+- 为某些齿轮模块在导入时访问的环境变量设置安全默认值。
+- 加载 `./cogs` 中的所有齿轮模块，以便注册 `@commands.hybrid_command(...)` 命令。
+- 全局或向特定服务器同步应用命令。
 
-Notes
+注意事项
 -----
-- Global sync can take a while to propagate (Discord-side). Guild sync is usually immediate.
-- This script does NOT start the status rotation task from `bot.py`; it only logs in,
-  loads cogs, syncs, then exits.
+- 全局同步可能需要一段时间才能生效（Discord 端）。服务器同步通常是即时的。
+- 此脚本不会启动 `bot.py` 中的状态轮换任务；它只会登录、加载齿轮模块、同步，然后退出。
 """
 
 from __future__ import annotations
@@ -45,12 +44,12 @@ def _strip_quotes(value: str) -> str:
 
 def load_env_file(env_path: Path) -> Dict[str, str]:
     """
-    Minimal .env loader.
+    最小化 .env 加载器。
 
-    - Supports KEY=VALUE pairs
-    - Ignores empty lines and lines starting with '#'
-    - Strips surrounding single/double quotes from values
-    - Does not expand variables
+    - 支持 KEY=VALUE 键值对
+    - 忽略空行和以 '#' 开头的行
+    - 去除值两端的单引号/双引号
+    - 不展开变量
     """
     if not env_path.exists():
         return {}
@@ -73,7 +72,7 @@ def load_env_file(env_path: Path) -> Dict[str, str]:
 
 def apply_env(overrides: Dict[str, str]) -> None:
     """
-    Apply loaded .env values into os.environ without overwriting existing vars.
+    将加载的 .env 值应用到 os.environ 中，不覆盖已有变量。
     """
     for k, v in overrides.items():
         os.environ.setdefault(k, v)
@@ -81,14 +80,13 @@ def apply_env(overrides: Dict[str, str]) -> None:
 
 def ensure_env_defaults() -> None:
     """
-    Some cogs read env vars at import time (module top-level).
+    某些齿轮模块在导入时（模块顶层）读取环境变量。
 
-    In particular, `cogs/ai.py` does:
+    特别是 `cogs/ai.py` 中有：
       auto1111_hosts = json.loads(os.environ['AUTO1111_HOSTS'])
       lms_hosts = json.loads(os.environ['LMS_HOSTS'])
 
-    So we provide safe defaults here to avoid KeyError/JSON errors when you only
-    want to sync commands.
+    因此我们在此提供安全默认值，以避免在只想同步命令时出现 KeyError/JSON 错误。
     """
     os.environ.setdefault("AUTO1111_HOSTS", "[]")
     os.environ.setdefault("LMS_HOSTS", "[]")
@@ -99,7 +97,7 @@ def ensure_env_defaults() -> None:
 
 async def load_all_cogs(bot: commands.Bot, cogs_dir: Path) -> None:
     """
-    Loads every `*.py` file inside the cogs directory as an extension.
+    加载齿轮模块目录中的每个 `*.py` 文件作为扩展。
     """
     if not cogs_dir.exists():
         raise FileNotFoundError(f"cogs directory not found: {cogs_dir}")
@@ -150,7 +148,7 @@ async def run(scope: str, guild_id: Optional[int], env_file: Path) -> int:
 
     @bot.event
     async def setup_hook() -> None:
-        # Load cogs so hybrid commands register with the app command tree.
+        # 加载齿轮模块，以便混合命令注册到应用命令树中。
         await load_all_cogs(bot, REPO_ROOT / "cogs")
 
         if scope == "guild":
@@ -160,7 +158,7 @@ async def run(scope: str, guild_id: Optional[int], env_file: Path) -> int:
                 return
 
             guild = discord.Object(id=guild_id)
-            # Copy global commands to the guild, then sync that guild.
+            # 将全局命令复制到服务器，然后同步该服务器。
             bot.tree.copy_global_to(guild=guild)
             synced = await bot.tree.sync(guild=guild)
             print(f"Synced {len(synced)} commands to guild {guild_id}.")

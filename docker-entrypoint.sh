@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# ensure we're in the app directory
+# 确保我们在应用目录中
 cd /data
-# pass through any args and run bot.py with unbuffered output
+# 传递所有参数并以无缓冲输出运行 bot.py
 exec python -u bot.py "$@"

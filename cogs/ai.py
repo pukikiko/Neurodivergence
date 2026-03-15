@@ -36,7 +36,7 @@ class AI(commands.Cog, name="ai"):
         messages = []
         async for message in channel.history(limit=limit):
             messages.append(f"{message.author.name}: {message.content}")
-        return "\n".join(messages[::-1])  # Reverse the order to get chronological order
+        return "\n".join(messages[::-1])  # 反转顺序以获得时间顺序
 
     async def gemini_request(self, prompt, system="You are a helpful assistant.", model="gemini-flash-lite-latest", attachments=None, api_keys=None):
         parts = [{"text": prompt}]
@@ -50,14 +50,14 @@ class AI(commands.Cog, name="ai"):
                     }
                 })
 
-        # Load keys if not provided
+        # 如果未提供密钥则加载
         if api_keys is None:
             gemini_keys_env = os.environ.get("GEMINI_KEYS")
             if gemini_keys_env:
                 try:
                     api_keys = json.loads(gemini_keys_env)
                 except json.JSONDecodeError:
-                     # Fallback if JSON is invalid, treat as single key if it looks like one, or empty
+                     # JSON 无效时的后备方案，如果看起来像单个密钥则作为单个密钥处理，否则为空
                      api_keys = []
             
             if not api_keys:
@@ -68,14 +68,14 @@ class AI(commands.Cog, name="ai"):
         if not api_keys:
              return "🤖⚡💥 Error: No Gemini API keys found."
 
-        # Create a copy to rotate through
+        # 创建副本以轮换使用
         keys_to_try = list(api_keys)
         last_error = "Unknown error"
         
         async with aiohttp.ClientSession() as session:
             while keys_to_try:
                 current_key = random.choice(keys_to_try)
-                keys_to_try.remove(current_key) # Don't retry the same key in this request
+                keys_to_try.remove(current_key) # 此次请求中不重试同一密钥
                 
                 url = f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={current_key}'
                 data = {"system_instruction": {"parts": [{"text": system}]}, "contents": [{"parts": parts}]}
@@ -89,11 +89,11 @@ class AI(commands.Cog, name="ai"):
                              return "The AI returned an empty response."
                     elif response.status == 429:
                         last_error = f"429 Too Many Requests (Key: ...{current_key[-4:]})"
-                        # Continue to next key
+                        # 继续尝试下一个密钥
                         continue
                     else:
-                        # For other errors, we might probably want to return immediately or also retry? 
-                        # Implementation plan said "If other error: Return the error message"
+                        # 对于其他错误，可能需要立即返回或也重试？
+                        # 实现计划说"如果是其他错误：返回错误消息"
                          try:
                              error_json = await response.json()
                              error_msg = error_json.get("error", {}).get("message", "Unknown error")
@@ -101,7 +101,7 @@ class AI(commands.Cog, name="ai"):
                              error_msg = await response.text()
                          return f"🤖⚡💥 {response.status}: {error_msg}"
             
-            # If we run out of keys
+            # 如果所有密钥用尽
             return f"🤖⚡💥 All keys exhausted. Last error: {last_error}"
 
     @commands.hybrid_command(
@@ -112,11 +112,11 @@ class AI(commands.Cog, name="ai"):
         embed = discord.Embed(title="Gemini", description="Please wait...")
         msg = await ctx.reply(embed=embed)
 
-        # Get channel history
-        # Get channel history
+        # 获取频道历史记录
+        # 获取频道历史记录
         history = await self.get_channel_history(ctx.channel)
         
-        # Process attachments
+        # 处理附件
         attachments = await self.process_attachments(ctx.message)
                 
         response = await self.gemini_request(prompt, attachments=attachments, model="gemini-flash-latest")
@@ -129,7 +129,7 @@ class AI(commands.Cog, name="ai"):
         if message.author.bot:
             return
         
-        # Check for keywords
+        # 检查关键词
         if "neuro" in message.content.lower() or "neurodivergence" in message.content.lower():
             history = await self.get_channel_history(message.channel)
             await self.respond_to_message(message, history)
@@ -138,7 +138,7 @@ class AI(commands.Cog, name="ai"):
         system = f"you are neuro (short for neuro-spicy!! 🌶️✨), a member of this discord who is aggressively happy, totally useless, and has a brain made of pudding!! 🍮💥 respond in first person using ONLY ALL CAPS AND A FUCK TON OF EMOJIS!! 🗣️💥✨ you must use EXTREMELY BROKEN ENGLISH, CONSTANT MISSPELLINGS, AND 2000S LINGO (XD, ROFL, RAWRL)!! 🎀🧠 keep your response to ONE SHORT PARAGRAPH ONLY!! 📉🔥 try to follow the conversation but be 100% confidently wrong and nonsensical about it!! 💅🎀 ignore logic, embrace brain-rot, and make sure your facts are fake and your grammar is a dumpster fire!! 🌈🦋🍄🔥\n\nhere's the recent chat history for context:\n\n{history}"
         prompt = f"you are replying to: {message.author.name}: {message.content}"
         
-        # Process attachments
+        # 处理附件
         attachments = await self.process_attachments(message)
         
         response = await self.gemini_request(prompt, system, attachments=attachments, model="gemini-flash-lite-latest")

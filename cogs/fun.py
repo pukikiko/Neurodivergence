@@ -38,7 +38,7 @@ class Fun(commands.Cog, name="fun"):
         msg = await ctx.reply(embed=embed)
 
         async with aiohttp.ClientSession() as session:
-            # Construct the URL with a random page number
+            # 用随机页码构建 URL
             page = random.randint(1, 16)
             url = f"https://crimestopperssa.com.au/unsolved-cases/?case-date_min-format=d%2Fm%2FY&case-date_max-format=d%2Fm%2FY&wpv_view_count=69&wpv_post_search=&reference-number=&case-date_min=&case-date_min-format=d%2Fm%2FY&case-date_max=&case-date_max-format=d%2Fm%2FY&wpv-case-type=0&wpv_paged={page}"
 
@@ -49,12 +49,12 @@ class Fun(commands.Cog, name="fun"):
                     return
                 soup = BeautifulSoup(await response.text(), "html.parser")
 
-                # Find image elements and filter out default "no photo" images
+                # 查找图片元素并过滤掉默认的"无照片"图片
                 image_elements = soup.find_all('img', class_="attachment-thumb size-thumb wp-post-image")
                 image_urls = [img["src"] for img in image_elements if "crimestoppers-no-photo" not in img["src"]]
 
                 if image_urls:
-                    # Choose a random image URL and set it as the embed image
+                    # 随机选择一个图片 URL 并设置为嵌入图片
                     embed = discord.Embed(title="Wanted Person - Crime Stoppers SA")
                     embed.set_image(url=random.choice(image_urls))
                     await msg.edit(embed=embed)
@@ -71,7 +71,7 @@ class Fun(commands.Cog, name="fun"):
         msg = await ctx.reply(embed=embed)
 
         async with aiohttp.ClientSession() as session:
-            # Choose a random Insecam URL and a random camera number
+            # 随机选择一个 Insecam URL 和随机摄像头编号
             insecam_url = choice(insecam_list)
             camera_number = random.randint(1, 10)
             url = f"{insecam_url}{camera_number}"
@@ -83,7 +83,7 @@ class Fun(commands.Cog, name="fun"):
                     return
                 soup = BeautifulSoup(await response.text(), "html.parser")
 
-                # Find camera elements and extract URLs
+                # 查找摄像头元素并提取 URL
                 camera_elements = soup.find_all('img', class_="thumbnail-item__img img-responsive")
                 camera_urls = [img["src"] for img in camera_elements]
 
@@ -126,7 +126,7 @@ class Fun(commands.Cog, name="fun"):
                     await msg.edit(embed=embed)
                     return
 
-                # uint8 ranges 0-255; >127 -> pick black, else pick red
+                # uint8 范围 0-255；>127 -> 选黑色，否则选红色
                 pick = "black" if num > 127 else "red"
                 embed = discord.Embed(title="Red or Black?", description=f"Pick **{pick.upper()}**!")
                 await msg.edit(embed=embed)

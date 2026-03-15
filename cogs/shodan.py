@@ -36,7 +36,7 @@ def _extract_screenshot(match: Dict[str, Any]) -> Optional[Tuple[bytes, str]]:
         return None
 
 def _get_data_str(match: Dict[str, Any]) -> Optional[str]:
-    """Returns the raw data as a string if available, else None."""
+    """如果可用则返回原始数据字符串，否则返回 None。"""
     data = match.get("data")
     if not data:
         return None
@@ -51,7 +51,7 @@ def _get_data_str(match: Dict[str, Any]) -> Optional[str]:
 
 def _get_concatenated_raw_data_file(matches: List[Dict[str, Any]], base_filename: str, start_idx: int) -> Optional[discord.File]:
     """
-    Returns a discord.File with the concatenated 'data' fields from the given matches.
+    返回一个包含给定匹配项中拼接的 'data' 字段的 discord.File。
     """
     contents = []
     for idx, match in enumerate(matches, start=start_idx + 1):
@@ -65,8 +65,8 @@ def _get_concatenated_raw_data_file(matches: List[Dict[str, Any]], base_filename
         return None
     joined = "\n".join(contents)
     data_bytes = joined.encode("utf-8", errors="replace")
-    # Discord (2024) allows up to 25MB per file, up to 10 attachments.
-    # Let's cap raw data size to a few MB to be safe.
+    # Discord（2024）允许每个文件最大 25MB，最多 10 个附件。
+    # 为安全起见，将原始数据大小限制在几 MB。
     MAX_SIZE = 8 * 1024 * 1024
     truncated = False
     if len(data_bytes) > MAX_SIZE:
@@ -139,8 +139,8 @@ class ShodanPageView(discord.ui.View):
 
     async def format_embed_and_files(self) -> Tuple[discord.Embed, Optional[List[discord.File]]]:
         """
-        Returns a tuple of (discord.Embed, Optional[List[discord.File]]) for current page.
-        Files can be screenshot image and/or raw data .txt.
+        返回当前页面的 (discord.Embed, Optional[List[discord.File]]) 元组。
+        文件可以是截图图片和/或原始数据 .txt。
         """
         start = self.page * self.page_size
         end = min(len(self.matches), start + self.page_size)
@@ -149,8 +149,8 @@ class ShodanPageView(discord.ui.View):
         if not self.screenshots:
             desc_lines = []
             files = []
-            # Prepare single concatenated raw data file for this page
-            # Use the city/first IP of page for filename root, otherwise fallback.
+            # 为此页面准备单个拼接的原始数据文件
+            # 使用页面的城市/第一个 IP 作为文件名根，否则使用后备值。
             if current_matches:
                 sample_ip = current_matches[0].get("ip_str") or "page"
             else:
@@ -172,7 +172,7 @@ class ShodanPageView(discord.ui.View):
                     f"ASN: {asn} | {country}/{region}\n"
                     f"Hostnames: {hostnames}\nDomains: {domains}\n"
                 )
-                # Link to single data file if it exists and this row has data
+                # 如果数据文件存在且此行有数据，则链接到单个数据文件
                 if raw_file and _get_data_str(m):
                     row += f"[Download raw data](attachment://{raw_file.filename})\n"
                 desc_lines.append(row)
@@ -236,7 +236,7 @@ class ShodanPageView(discord.ui.View):
             country = (location.get("country_name") or location.get("country_code") or "N/A") if location else "N/A"
             region = (location.get("region_code") or location.get("region_name") or "N/A") if location else "N/A"
 
-            # For screenshot mode, keep current behavior: attach corresponding raw data file for the row
+            # 截图模式下，保持当前行为：为该行附加对应的原始数据文件
             single_raw_file = None
             if _get_data_str(match):
                 single_raw_file = _get_concatenated_raw_data_file([match], f"{ip}_{port}", start)
