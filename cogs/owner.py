@@ -16,10 +16,10 @@ class Owner(commands.Cog, name="owner"):
     @commands.is_owner()
     async def sync(self, context: Context, scope: str) -> None:
         """
-        Synchonizes the slash commands.
+        同步斜杠命令。
 
-        :param context: The command context.
-        :param scope: The scope of the sync. Can be `global` or `guild`.
+        :param context: 命令上下文。
+        :param scope: 同步范围。可以是 `global` 或 `guild`。
         """
 
         if scope == "global":
@@ -54,10 +54,10 @@ class Owner(commands.Cog, name="owner"):
     @commands.is_owner()
     async def unsync(self, context: Context, scope: str) -> None:
         """
-        Unsynchonizes the slash commands.
+        取消同步斜杠命令。
 
-        :param context: The command context.
-        :param scope: The scope of the sync. Can be `global`, `current_guild` or `guild`.
+        :param context: 命令上下文。
+        :param scope: 同步范围。可以是 `global`、`current_guild` 或 `guild`。
         """
 
         if scope == "global":
@@ -91,10 +91,10 @@ class Owner(commands.Cog, name="owner"):
     @commands.is_owner()
     async def load(self, context: Context, cog: str) -> None:
         """
-        The bot will load the given cog.
+        机器人将加载指定的齿轮模块。
 
-        :param context: The hybrid command context.
-        :param cog: The name of the cog to load.
+        :param context: 混合命令上下文。
+        :param cog: 要加载的齿轮模块名称。
         """
         try:
             await self.bot.load_extension(f"cogs.{cog}")
@@ -117,10 +117,10 @@ class Owner(commands.Cog, name="owner"):
     @commands.is_owner()
     async def unload(self, context: Context, cog: str) -> None:
         """
-        The bot will unload the given cog.
+        机器人将卸载指定的齿轮模块。
 
-        :param context: The hybrid command context.
-        :param cog: The name of the cog to unload.
+        :param context: 混合命令上下文。
+        :param cog: 要卸载的齿轮模块名称。
         """
         try:
             await self.bot.unload_extension(f"cogs.{cog}")
@@ -143,10 +143,10 @@ class Owner(commands.Cog, name="owner"):
     @commands.is_owner()
     async def reload(self, context: Context, cog: str) -> None:
         """
-        The bot will reload the given cog.
+        机器人将重新加载指定的齿轮模块。
 
-        :param context: The hybrid command context.
-        :param cog: The name of the cog to reload.
+        :param context: 混合命令上下文。
+        :param cog: 要重新加载的齿轮模块名称。
         """
         try:
             await self.bot.reload_extension(f"cogs.{cog}")

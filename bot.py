@@ -12,18 +12,18 @@ from discord.ext.commands import Context
 intents = discord.Intents.default()
 intents.message_content = True
 
-# Setup both of the loggers
+# 设置两个日志记录器
 
 
 class LoggingFormatter(logging.Formatter):
-    # Colors
+    # 颜色
     black = "\x1b[30m"
     red = "\x1b[31m"
     green = "\x1b[32m"
     yellow = "\x1b[33m"
     blue = "\x1b[34m"
     gray = "\x1b[38m"
-    # Styles
+    # 样式
     reset = "\x1b[0m"
     bold = "\x1b[1m"
 
@@ -49,17 +49,17 @@ class LoggingFormatter(logging.Formatter):
 logger = logging.getLogger("Neurodivergence")
 logger.setLevel(logging.INFO)
 
-# Console handler
+# 控制台处理器
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(LoggingFormatter())
-# File handler
+# 文件处理器
 file_handler = logging.FileHandler(filename="discord.log", encoding="utf-8", mode="w")
 file_handler_formatter = logging.Formatter(
     "[{asctime}] [{levelname:<8}] {name}: {message}", "%Y-%m-%d %H:%M:%S", style="{"
 )
 file_handler.setFormatter(file_handler_formatter)
 
-# Add the handlers
+# 添加处理器
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
@@ -72,18 +72,18 @@ class DiscordBot(commands.Bot):
             help_command=None,
         )
         """
-        This creates custom bot variables so that we can access these variables in cogs more easily.
+        创建自定义机器人变量，以便在齿轮模块中更方便地访问这些变量。
 
-        For example, The config is available using the following code:
-        - self.config # In this class
-        - bot.config # In this file
-        - self.bot.config # In cogs
+        例如，配置可以通过以下代码访问：
+        - self.config # 在此类中
+        - bot.config # 在此文件中
+        - self.bot.config # 在齿轮模块中
         """
         self.logger = logger
 
     async def load_cogs(self) -> None:
         """
-        The code in this function is executed whenever the bot will start.
+        此函数中的代码在机器人启动时执行。
         """
         for file in os.listdir(f"{os.path.realpath(os.path.dirname(__file__))}/cogs"):
             if file.endswith(".py"):
@@ -100,7 +100,7 @@ class DiscordBot(commands.Bot):
     @tasks.loop(minutes=1.0)
     async def status_task(self) -> None:
         """
-        Setup the game status task of the bot.
+        设置机器人的游戏状态任务。
         """
         statuses = json.loads(os.environ['STATUSES'])
         await self.change_presence(activity=discord.CustomActivity(name=random.choice(statuses)))
@@ -108,13 +108,13 @@ class DiscordBot(commands.Bot):
     @status_task.before_loop
     async def before_status_task(self) -> None:
         """
-        Before starting the status changing task, we make sure the bot is ready
+        在启动状态切换任务之前，确保机器人已准备就绪
         """
         await self.wait_until_ready()
 
     async def setup_hook(self) -> None:
         """
-        This will just be executed when the bot starts the first time.
+        这段代码仅在机器人首次启动时执行。
         """
         self.logger.info(f"Logged in as {self.user.name}")
         self.logger.info(f"discord.py API version: {discord.__version__}")
@@ -128,9 +128,9 @@ class DiscordBot(commands.Bot):
 
     async def on_message(self, message: discord.Message) -> None:
         """
-        The code in this event is executed every time someone sends a message, with or without the prefix
+        每当有人发送消息时（无论是否带有前缀），此事件中的代码都会执行
 
-        :param message: The message that was sent.
+        :param message: 发送的消息。
         """
         if message.author == self.user or message.author.bot:
             return
@@ -138,9 +138,9 @@ class DiscordBot(commands.Bot):
 
     async def on_command_completion(self, context: Context) -> None:
         """
-        The code in this event is executed every time a normal command has been *successfully* executed.
+        每当普通命令*成功*执行时，此事件中的代码都会执行。
 
-        :param context: The context of the command that has been executed.
+        :param context: 已执行命令的上下文。
         """
         full_command_name = context.command.qualified_name
         split = full_command_name.split(" ")
@@ -166,10 +166,10 @@ class DiscordBot(commands.Bot):
 
     async def on_command_error(self, context: Context, error) -> None:
         """
-        The code in this event is executed every time a normal valid command catches an error.
+        每当普通有效命令捕获到错误时，此事件中的代码都会执行。
 
-        :param context: The context of the normal command that failed executing.
-        :param error: The error that has been faced.
+        :param context: 执行失败的普通命令的上下文。
+        :param error: 遇到的错误。
         """
         if isinstance(error, commands.CommandOnCooldown):
             minutes, seconds = divmod(error.retry_after, 60)
@@ -222,7 +222,7 @@ class DiscordBot(commands.Bot):
         elif isinstance(error, commands.MissingRequiredArgument):
             embed = discord.Embed(
                 title="Error!",
-                # We need to capitalize because the command arguments have no capital letter in the code and they are the first word in the error message.
+                # 需要首字母大写，因为代码中的命令参数没有大写字母，而它们是错误消息中的第一个词。
                 description=str(error).capitalize(),
                 color=0xE02B2B,
             )

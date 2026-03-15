@@ -30,20 +30,20 @@ class Utility(commands.Cog, name="utility"):
                     return
                 soup = BeautifulSoup(await response.text(), "html.parser")
 
-                # Find the main weather div
+                # 查找主要天气 div
                 div_element = soup.find("div", class_="day main")
                 if not div_element:
                     embed = discord.Embed(title="Weather", description="No weather information found for this location.")
                     await msg.edit(embed=embed)
                     return
 
-                # Extract weather information
+                # 提取天气信息
                 summary = div_element.find('dd', class_="summary").text
                 max_temp = div_element.find('em', class_="max").text
                 rainfall_chance = div_element.find('em', class_="pop").text
                 description = div_element.find('p').text
 
-                # Create and send the embed with weather information
+                # 创建并发送包含天气信息的嵌入消息
                 embed = discord.Embed(title=f"BOM Weather - {town.capitalize()}")
                 embed.add_field(name="Max Temp", value=f"{max_temp}°C", inline=True)
                 embed.add_field(name="Chance of any rain", value=f"{rainfall_chance}", inline=True)
@@ -67,14 +67,14 @@ class Utility(commands.Cog, name="utility"):
                     return
                 soup = BeautifulSoup(await response.text(), "html.parser")
 
-                # Find all profile divs
+                # 查找所有个人资料 div
                 profile_divs = soup.find("div", class_="col-12 col-md-8 order-first order-md-last mb-4 mb-md-0").find_all("div", class_="buttons-fix")
                 if not profile_divs:
                     embed = discord.Embed(title=f"Person Lookup - {query.capitalize()}", description="No results found.")
                     await msg.edit(embed=embed)
                     return
 
-                # Iterate over each profile div and extract the relevant information then add to embed
+                # 遍历每个个人资料 div，提取相关信息并添加到嵌入消息
                 embed = discord.Embed(title=f"Person Lookup - {query.capitalize()}")
                 for profile in profile_divs:
                     name = profile.find("a", class_="stretched-link").text.strip()
@@ -100,7 +100,7 @@ class Utility(commands.Cog, name="utility"):
                     return
             soup = BeautifulSoup(await response.text(), "html.parser")
 
-            # Find all price divs
+            # 查找所有价格 div
             results_box = soup.find("ul", class_="cheapest-stations")
             servo_divs = results_box.find_all("li")
             if not servo_divs:
@@ -108,7 +108,7 @@ class Utility(commands.Cog, name="utility"):
                 await msg.edit(embed=embed)
                 return
 
-            # Iterate over each price div and extract the relevant information then add to embed
+            # 遍历每个价格 div，提取相关信息并添加到嵌入消息
             embed = discord.Embed(title=f"Fuel Prices - {town.capitalize()}", description="low to high")
             for servo in servo_divs:
                 name = servo.find("strong").text.strip()
@@ -133,7 +133,7 @@ class Utility(commands.Cog, name="utility"):
                     await msg.edit(embed=embed)
                     return
                 elif response.status != 200:
-                    # Handle other potential errors
+                    # 处理其他可能的错误
                     embed = discord.Embed(title=f"Open ports - {ip}", description=f"An error occurred while fetching data. {response.status}")
                     await msg.edit(embed=embed)
                     return
@@ -155,7 +155,7 @@ class Utility(commands.Cog, name="utility"):
         description="Check a vehicles registration (South Australia)",
     )
     async def rego(self, ctx, *, plate="wgz422"):
-        # Normalize plate: uppercase and remove all spaces
+        # 规范化车牌：转大写并移除所有空格
         cleaned_plate = str(plate).strip().upper().replace(" ", "")
         embed = discord.Embed(title=f"Check Registration - {plate}", description="Please wait...")
         msg = await ctx.reply(embed=embed)
@@ -207,14 +207,14 @@ class Utility(commands.Cog, name="utility"):
             if count == 25:
                 break
             if not all(key in item for key in ["bssid", "latitude", "longitude", "module"]):
-                continue  # Skip entries with missing data
+                continue  # 跳过缺少数据的条目
 
             bssid = item["bssid"]
             latitude = item["latitude"]
             longitude = item["longitude"]
             module = item["module"]
             location_url = f"https://www.google.com/maps/search/?q={latitude},{longitude}"
-            ssid = item.get("ssid", None)  # Get ssid if available
+            ssid = item.get("ssid", None)  # 如果可用则获取 ssid
             if ssid:
                 count += 1
                 embed.add_field(name=f"{module} - {bssid} - {ssid}", value=f"[{latitude}, {longitude}]({location_url})", inline=False)
@@ -246,7 +246,7 @@ class Utility(commands.Cog, name="utility"):
                     await msg.edit(embed=embed)
                     return
 
-        # Process response
+        # 处理响应
         if not isinstance(data, dict):
             embed = discord.Embed(title=f"Payphone Search - {phone_number}", description="Unexpected API response format.")
             await msg.edit(embed=embed)

@@ -14,37 +14,37 @@ logger = logging.getLogger("Neurodivergence")
 
 POLL_INTERVAL = int(os.getenv("MINECRAFT_POLL_INTERVAL", "30"))
 
-# Minecraft § formatting code to hex color mapping (Java Edition)
+# Minecraft § 格式代码到十六进制颜色的映射（Java 版）
 MC_COLOR_MAP = {
-    "0": 0x000000,  # black
-    "1": 0x0000AA,  # dark_blue
-    "2": 0x00AA00,  # dark_green
-    "3": 0x00AAAA,  # dark_aqua
-    "4": 0xAA0000,  # dark_red
-    "5": 0xAA00AA,  # dark_purple
-    "6": 0xFFAA00,  # gold
-    "7": 0xAAAAAA,  # gray
-    "8": 0x555555,  # dark_gray
-    "9": 0x5555FF,  # blue
-    "a": 0x55FF55,  # green
-    "b": 0x55FFFF,  # aqua
-    "c": 0xFF5555,  # red
-    "d": 0xFF55FF,  # light_purple
-    "e": 0xFFFF55,  # yellow
-    "f": 0xFFFFFF,  # white
+    "0": 0x000000,  # 黑色
+    "1": 0x0000AA,  # 深蓝
+    "2": 0x00AA00,  # 深绿
+    "3": 0x00AAAA,  # 深青
+    "4": 0xAA0000,  # 深红
+    "5": 0xAA00AA,  # 深紫
+    "6": 0xFFAA00,  # 金色
+    "7": 0xAAAAAA,  # 灰色
+    "8": 0x555555,  # 深灰
+    "9": 0x5555FF,  # 蓝色
+    "a": 0x55FF55,  # 绿色
+    "b": 0x55FFFF,  # 青色
+    "c": 0xFF5555,  # 红色
+    "d": 0xFF55FF,  # 浅紫
+    "e": 0xFFFF55,  # 黄色
+    "f": 0xFFFFFF,  # 白色
 }
 
-# Regex matching any § formatting code (colors + k/l/m/n/o/r)
+# 匹配任何 § 格式代码的正则表达式（颜色 + k/l/m/n/o/r）
 MC_FORMAT_RE = re.compile(r"§[0-9a-fk-or]", re.IGNORECASE)
 
 
 def strip_mc_formatting(text: str) -> str:
-    """Remove all Minecraft § formatting codes from a string."""
+    """从字符串中移除所有 Minecraft § 格式代码。"""
     return MC_FORMAT_RE.sub("", text)
 
 
 def get_motd_color(text: str) -> int | None:
-    """Return the hex color of the first § color code found, or None."""
+    """返回找到的第一个 § 颜色代码的十六进制颜色值，或返回 None。"""
     match = re.search(r"§([0-9a-f])", text, re.IGNORECASE)
     if match:
         return MC_COLOR_MAP.get(match.group(1).lower())
@@ -57,8 +57,8 @@ class Sidepipe(commands.Cog, name="sidepipe"):
         self.whitelisted_guilds = [
             discord.Object(id=1161606292541014056)
         ]
-        self.mc_servers = {}  # address -> set of player names
-        self.mc_server_online = {}  # address -> bool
+        self.mc_servers = {}  # 地址 -> 玩家名称集合
+        self.mc_server_online = {}  # 地址 -> 布尔值
         self._load_mc_servers()
 
     def _load_mc_servers(self):
@@ -125,7 +125,7 @@ class Sidepipe(commands.Cog, name="sidepipe"):
 
                 previous_players = self.mc_servers[address]
 
-                # Skip notifications on first poll (initial state)
+                # 首次轮询时跳过通知（初始状态）
                 if self.mc_server_online[address] is not None:
                     joined = current_players - previous_players
                     left = previous_players - current_players
