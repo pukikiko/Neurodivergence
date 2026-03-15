@@ -2,3 +2,4 @@ discord.py
 aiohttp
 beautifulsoup4
 pillow
+mcstatus
