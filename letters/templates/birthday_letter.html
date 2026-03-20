@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      @page {
+        size: A4;
+        margin: 1.6cm;
+      }
+      body {
+        font-family: DejaVu Sans, Arial, sans-serif;
+        line-height: 1.35;
+        color: #1a1a1a;
+      }
+      .card {
+        border: 2px dashed #7a5cff;
+        border-radius: 14px;
+        padding: 18px 18px;
+      }
+      h1 {
+        margin: 0 0 12px 0;
+        font-size: 28px;
+      }
+      p {
+        margin: 10px 0;
+        font-size: 14.5px;
+      }
+      .meta {
+        margin-top: 16px;
+        padding-top: 12px;
+        border-top: 1px solid #e6e6e6;
+        font-size: 13px;
+        color: #333;
+      }
+      .wink {
+        font-weight: 600;
+        color: #5b2bff;
+      }
+    </style>
+    <title>Birthday Letter</title>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Happy Birthday, {{ recipient_name }}!</h1>
+      <p>
+        Dear {{ recipient_name }}, today is your legendary day. I hope your cake is
+        extremely moist, your vibes are extremely immaculate, and your candles
+        do not judge you for the number of re-lit attempts.
+      </p>
+      <p>
+        From {{ sender_name }} (professional hype-person, amateur chaos consultant).
+      </p>
+      <p class="wink">
+        Age (allegedly): {{ age }}. Definitely not suspicious. Absolutely canon.
+      </p>
+      <div class="meta">
+        This letter was generated with love, mild confusion, and advanced template magic.
+      </div>
+    </div>
+  </body>
+</html>
+
