@@ -1,0 +1,62 @@
+name: Bot Smoke Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  bot-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t neurodivergence:smoke .
+
+      - name: Run bot container (detached)
+        run: |
+          docker rm -f neurodivergence-smoke >/dev/null 2>&1 || true
+          docker run -d --name neurodivergence-smoke \
+            -e TOKEN='${{ secrets.TOKEN }}' \
+            -e AUTO1111_HOSTS='[]' \
+            -e LMS_HOSTS='[]' \
+            -e STATUSES='["Neurodivergence"]' \
+            neurodivergence:smoke
+
+      - name: Wait for Discord gateway connection
+        run: |
+          set -euo pipefail
+          container="neurodivergence-smoke"
+          timeout_seconds=60
+          started_at="$(date +%s)"
+
+          while true; do
+            logs="$(docker logs "$container" 2>&1 || true)"
+
+            if [[ "$logs" == *"has connected to Gateway"* ]]; then
+              echo "Bot connected to Discord gateway."
+              exit 0
+            fi
+
+            now="$(date +%s)"
+            elapsed="$((now - started_at))"
+            if [[ "$elapsed" -ge "$timeout_seconds" ]]; then
+              echo "Timed out waiting for gateway connection."
+              echo "---- container logs ----"
+              echo "$logs"
+              echo "-------------------------"
+              exit 1
+            fi
+
+            sleep 2
+          done
+
+      - name: Cleanup container
+        if: always()
+        run: |
+          docker rm -f neurodivergence-smoke >/dev/null 2>&1 || true
+
