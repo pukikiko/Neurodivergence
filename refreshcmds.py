@@ -94,6 +94,7 @@ def ensure_env_defaults() -> None:
     os.environ.setdefault("LMS_HOSTS", "[]")
     os.environ.setdefault("GEMINI_KEYS", "[]")
     os.environ.setdefault("STATUSES", json.dumps(["Neurodivergence"]))
+    os.environ.setdefault("MINECRAFT_SERVERS", "[]")
 
 
 async def load_all_cogs(bot: commands.Bot, cogs_dir: Path) -> None:

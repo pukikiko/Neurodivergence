@@ -4,3 +4,4 @@ beautifulsoup4
 pillow
 jinja2
 WeasyPrint
+mcstatus
