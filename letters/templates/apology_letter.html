@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      @page {
+        size: A4;
+        margin: 1.6cm;
+      }
+      body {
+        font-family: DejaVu Sans, Arial, sans-serif;
+        line-height: 1.35;
+        color: #1a1a1a;
+      }
+      .card {
+        border: 2px solid #ff4d6d;
+        border-radius: 14px;
+        padding: 18px 18px;
+      }
+      h1 {
+        margin: 0 0 12px 0;
+        font-size: 28px;
+        color: #b3001b;
+      }
+      p {
+        margin: 10px 0;
+        font-size: 14.5px;
+      }
+      .reason {
+        background: #fff0f2;
+        border-left: 6px solid #ff4d6d;
+        padding: 10px 12px;
+        border-radius: 10px;
+        margin-top: 14px;
+        margin-bottom: 14px;
+      }
+      .closing {
+        margin-top: 18px;
+        font-size: 13px;
+        color: #333;
+      }
+    </style>
+    <title>Apology Letter</title>
+  </head>
+  <body>
+    <div class="card">
+      <h1>I Am Sincerely Sorry, {{ recipient_name }}.</h1>
+
+      <p>
+        Dear {{ recipient_name }}, I hereby submit my official apology letter,
+        delivered via paper-planet technology (PDF).
+      </p>
+
+      <div class="reason">
+        <strong>Reason I messed up:</strong> {{ reason }}
+      </div>
+
+      <p>
+        I promise to reflect, improve, and become a better version of myself
+        (within reasonable cosmic time limits).
+      </p>
+
+      <p>
+        With apologies and questionable confidence,<br />
+        {{ sender_name }}
+      </p>
+
+      <div class="closing">
+        P.S. If you forgive me, I will celebrate responsibly. If you do not,
+        I will still bring snacks in spirit.
+      </div>
+    </div>
+  </body>
+</html>
+

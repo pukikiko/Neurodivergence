@@ -61,6 +61,11 @@ Includes Australian-centric utilities and information retrieval.
 - `cctv` — Random open CCTV stream
 - `redorblack` — Quantum random number generator
 
+### Letters (`cogs/letters.py`)
+
+- `birthday_letter [recipient_name] [sender_name] [age]` — Generates a funny birthday letter PDF from an HTML template.
+- `apology_letter [recipient_name] [sender_name] [reason]` — Generates a funny apology letter PDF from an HTML template.
+
 ### 6. Moderation (`cogs/moderation.py`)
 
 - `purge [amount]` — Bulk message deletion
@@ -134,7 +139,7 @@ Server-specific functions (e.g. `cctvselfie`) for a particular server. **Remove 
 
 ### Docker
 
-```
+```bash
 docker build -t neurodivergence:latest .
 docker run -d \
   -e TOKEN=your_discord_token \
@@ -146,7 +151,7 @@ docker run -d \
 
 ### Local
 
-```
+```bash
 pip install -r requirements.txt
 # set env vars, e.g. in .env
 python bot.py
@@ -172,6 +177,7 @@ python bot.py
 ## Extending and Cogs
 
 Create new cogs by subclassing `commands.Cog` and exposing `commands.hybrid_command` or decorator-based command handlers. See any cog (e.g., `cogs/shodan.py`) for examples of:
+
 - Custom `discord.ui.View` for rich interactions (see Shodan for button + retry logic)
 - Robust handling for user permissions, API failures, and async workflow
 
@@ -196,4 +202,3 @@ Create new cogs by subclassing `commands.Cog` and exposing `commands.hybrid_comm
 ## License and Contribution
 
 See repo for details. PRs and forks are welcome for learning or self-hosting!
-
