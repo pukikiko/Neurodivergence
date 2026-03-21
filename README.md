@@ -40,6 +40,7 @@ Make sure that all environment variables are set up correctly before running the
 | STATUSES        | The statuses you want the bot to display in list format: ["68+% of people fail VORT", "CBT&A costs $3000"] |
 | GEOWIFI_URL     | The URL for your GeoWifi API instance, more info: https://github.com/SWAGNET-Enterprises/geowifi-api       |
 | HTTP_PROXY      | The URL of your HTTP proxy used for fetching data: http://100.65.0.1:8888                                  |
+| SHODAN_KEY      | API key for shodan.io - provides API access for cogs/shodan.py                                             |
 
 ### The Sidepipe Cog
 
