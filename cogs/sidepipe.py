@@ -13,6 +13,7 @@ from mcstatus import JavaServer
 logger = logging.getLogger("Neurodivergence")
 
 POLL_INTERVAL = int(os.getenv("MINECRAFT_POLL_INTERVAL", "30"))
+OFFLINE_THRESHOLD = int(os.getenv("MINECRAFT_OFFLINE_THRESHOLD", "3"))  # consecutive failures before declaring offline
 
 # Minecraft § formatting code to hex color mapping (Java Edition)
 MC_COLOR_MAP = {
@@ -59,6 +60,7 @@ class Sidepipe(commands.Cog, name="sidepipe"):
         ]
         self.mc_servers = {}  # address -> set of player names
         self.mc_server_online = {}  # address -> bool
+        self.mc_fail_count = {}  # address -> consecutive failure count
         self._load_mc_servers()
 
     def _load_mc_servers(self):
@@ -67,6 +69,7 @@ class Sidepipe(commands.Cog, name="sidepipe"):
         for addr in addresses:
             self.mc_servers[addr] = set()
             self.mc_server_online[addr] = None
+            self.mc_fail_count[addr] = 0
 
     def _get_mc_channel(self):
         channel_id = os.getenv("MINECRAFT_CHANNEL")
@@ -121,7 +124,10 @@ class Sidepipe(commands.Cog, name="sidepipe"):
 
                 current_players = set()
                 if status.players.sample:
-                    current_players = {p.name for p in status.players.sample}
+                    current_players = {
+                        p.name for p in status.players.sample
+                        if p.name != "Anonymous Player"
+                    }
 
                 previous_players = self.mc_servers[address]
 
@@ -159,21 +165,24 @@ class Sidepipe(commands.Cog, name="sidepipe"):
 
                 self.mc_servers[address] = current_players
                 self.mc_server_online[address] = True
+                self.mc_fail_count[address] = 0
 
             except Exception as e:
-                if self.mc_server_online[address] is True:
-                    embed = discord.Embed(
-                        description=f"**{address}** appears to be offline",
-                        color=0xFF5555,
-                    )
-                    await channel.send(embed=embed)
-                    self.mc_server_online[address] = False
-                    self.mc_servers[address] = set()
-                elif self.mc_server_online[address] is None:
-                    self.mc_server_online[address] = False
-                    self.mc_servers[address] = set()
+                self.mc_fail_count[address] += 1
+                logger.warning(
+                    f"Failed to poll Minecraft server {address} "
+                    f"({self.mc_fail_count[address]}/{OFFLINE_THRESHOLD}): {e}"
+                )
 
-                logger.warning(f"Failed to poll Minecraft server {address}: {e}")
+                if self.mc_fail_count[address] >= OFFLINE_THRESHOLD:
+                    if self.mc_server_online[address] is True:
+                        embed = discord.Embed(
+                            description=f"**{address}** appears to be offline",
+                            color=0xFF5555,
+                        )
+                        await channel.send(embed=embed)
+                    self.mc_server_online[address] = False
+                    self.mc_servers[address] = set()
 
     @poll_mc_servers.before_loop
     async def before_mc_poll(self):
@@ -219,8 +228,13 @@ class Sidepipe(commands.Cog, name="sidepipe"):
                     inline=True,
                 )
 
+                player_names = ""
                 if status.players.sample:
-                    player_names = ", ".join(p.name for p in status.players.sample)
+                    player_names = ", ".join(
+                        p.name for p in status.players.sample
+                        if p.name != "Anonymous Player"
+                    )
+                if player_names:
                     embed.add_field(
                         name="Online",
                         value=player_names,
