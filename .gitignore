@@ -37,3 +37,7 @@ Thumbs.db
 
 # Docker
 .dockerignore
+
+# Local music library (audio binaries)
+music_library/**/*.mp3
+music_library/**/*.flac
