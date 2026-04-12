@@ -121,9 +121,11 @@ class DiscordBot(commands.Bot):
         """
         The code in this function is executed whenever the bot will start.
         """
-        for file in os.listdir(f"{os.path.realpath(os.path.dirname(__file__))}/cogs"):
-            if file.endswith(".py"):
-                extension = file[:-3]
+        cogs_dir = Path(__file__).resolve().parent / "cogs"
+
+        for path in sorted(cogs_dir.iterdir()):
+            if path.is_file() and path.suffix == ".py" and not path.name.startswith("_"):
+                extension = path.stem
                 try:
                     await self.load_extension(f"cogs.{extension}")
                     self.logger.info(f"Loaded extension '{extension}'")
@@ -132,6 +134,18 @@ class DiscordBot(commands.Bot):
                     self.logger.error(
                         f"Failed to load extension {extension}\n{exception}"
                     )
+            elif path.is_dir() and not path.name.startswith("_"):
+                init_py = path / "__init__.py"
+                if init_py.is_file():
+                    ext = path.name
+                    try:
+                        await self.load_extension(f"cogs.{ext}")
+                        self.logger.info(f"Loaded extension '{ext}' (package)")
+                    except Exception as e:
+                        exception = f"{type(e).__name__}: {e}"
+                        self.logger.error(
+                            f"Failed to load extension {ext}\n{exception}"
+                        )
 
     @tasks.loop(minutes=1.0)
     async def status_task(self) -> None:
