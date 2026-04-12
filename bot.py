@@ -3,7 +3,42 @@ import logging
 import os
 import platform
 import random
-import sys
+from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parent
+
+
+def _load_repo_dotenv() -> None:
+    """
+    Load a repo-root .env into os.environ without overwriting existing variables.
+    Matches the behavior of refreshcmds.py so MUSIC_LOCAL_DIR and TOKEN work when
+    running `python bot.py` without manually exporting every key.
+    """
+    env_path = _REPO_ROOT / ".env"
+    if not env_path.is_file():
+        return
+
+    def _strip_quotes(value: str) -> str:
+        value = value.strip()
+        if len(value) >= 2 and ((value[0] == value[-1] == '"') or (value[0] == value[-1] == "'")):
+            return value[1:-1]
+        return value
+
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = _strip_quotes(value)
+        if not key:
+            continue
+        os.environ.setdefault(key, value)
+
+
+_load_repo_dotenv()
 
 import discord
 from discord.ext import commands, tasks
