@@ -61,11 +61,6 @@ Includes Australian-centric utilities and information retrieval.
 - `cctv` — Random open CCTV stream
 - `redorblack` — Quantum random number generator
 
-### Letters (`cogs/letters.py`)
-
-- `birthday_letter [recipient_name] [sender_name] [age]` — Generates a funny birthday letter PDF from an HTML template.
-- `apology_letter [recipient_name] [sender_name] [reason]` — Generates a funny apology letter PDF from an HTML template.
-
 ### 6. Moderation (`cogs/moderation.py`)
 
 - `purge [amount]` — Bulk message deletion
@@ -186,7 +181,7 @@ docker run -d \
 
 ### Local
 
-```bash
+```
 pip install -r requirements.txt
 # Install FFmpeg (OS package); required for voice/music
 # set env vars, e.g. in .env
@@ -240,3 +235,4 @@ Create new cogs by subclassing `commands.Cog` and exposing `commands.hybrid_comm
 ## License and Contribution
 
 See repo for details. PRs and forks are welcome for learning or self-hosting!
+
