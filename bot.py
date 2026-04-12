@@ -3,7 +3,42 @@ import logging
 import os
 import platform
 import random
-import sys
+from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parent
+
+
+def _load_repo_dotenv() -> None:
+    """
+    Load a repo-root .env into os.environ without overwriting existing variables.
+    Matches the behavior of refreshcmds.py so MUSIC_LOCAL_DIR and TOKEN work when
+    running `python bot.py` without manually exporting every key.
+    """
+    env_path = _REPO_ROOT / ".env"
+    if not env_path.is_file():
+        return
+
+    def _strip_quotes(value: str) -> str:
+        value = value.strip()
+        if len(value) >= 2 and ((value[0] == value[-1] == '"') or (value[0] == value[-1] == "'")):
+            return value[1:-1]
+        return value
+
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = _strip_quotes(value)
+        if not key:
+            continue
+        os.environ.setdefault(key, value)
+
+
+_load_repo_dotenv()
 
 import discord
 from discord.ext import commands, tasks
@@ -11,6 +46,7 @@ from discord.ext.commands import Context
 
 intents = discord.Intents.default()
 intents.message_content = True
+intents.voice_states = True
 
 # Setup both of the loggers
 
@@ -85,9 +121,11 @@ class DiscordBot(commands.Bot):
         """
         The code in this function is executed whenever the bot will start.
         """
-        for file in os.listdir(f"{os.path.realpath(os.path.dirname(__file__))}/cogs"):
-            if file.endswith(".py"):
-                extension = file[:-3]
+        cogs_dir = Path(__file__).resolve().parent / "cogs"
+
+        for path in sorted(cogs_dir.iterdir()):
+            if path.is_file() and path.suffix == ".py" and not path.name.startswith("_"):
+                extension = path.stem
                 try:
                     await self.load_extension(f"cogs.{extension}")
                     self.logger.info(f"Loaded extension '{extension}'")
@@ -96,6 +134,18 @@ class DiscordBot(commands.Bot):
                     self.logger.error(
                         f"Failed to load extension {extension}\n{exception}"
                     )
+            elif path.is_dir() and not path.name.startswith("_"):
+                init_py = path / "__init__.py"
+                if init_py.is_file():
+                    ext = path.name
+                    try:
+                        await self.load_extension(f"cogs.{ext}")
+                        self.logger.info(f"Loaded extension '{ext}' (package)")
+                    except Exception as e:
+                        exception = f"{type(e).__name__}: {e}"
+                        self.logger.error(
+                            f"Failed to load extension {ext}\n{exception}"
+                        )
 
     @tasks.loop(minutes=1.0)
     async def status_task(self) -> None:

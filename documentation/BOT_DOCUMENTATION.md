@@ -2,14 +2,14 @@
 
 ## Overview
 
-Neurodivergence is a feature-rich Discord bot built with Python using the `discord.py` library. The bot offers extensive features, including AI chat, image generation, server moderation, utilities, and fun/novelty commands. It uses a modular cog-based architecture to make features easy to extend or add.
+Neurodivergence is a feature-rich Discord bot built with Python using the `discord.py` library. The bot offers extensive features, including AI chat, image generation, server moderation, utilities, fun/novelty commands, and optional voice music (YouTube and local MP3/FLAC). It uses a modular cog-based architecture to make features easy to extend or add.
 
 ## Architecture
 
 ### Core Components
 
 - **Main Bot (`bot.py`)**: Handles initialization, command routing, cog loading, and logging
-- **Cogs System**: Feature groups organized as Python modules in the `cogs/` folder
+- **Cogs System**: Feature groups in the `cogs/` folder as single-file modules (e.g. `cogs/general.py`) or packages with `__init__.py` exposing `setup()` (e.g. `cogs/music/`)
 - **Logging**: Color-coded console logging and persistent file logging
 - **Status Rotation**: Regularly updated Discord presence/status
 
@@ -61,11 +61,6 @@ Includes Australian-centric utilities and information retrieval.
 - `cctv` — Random open CCTV stream
 - `redorblack` — Quantum random number generator
 
-### Letters (`cogs/letters.py`)
-
-- `birthday_letter [recipient_name] [sender_name] [age]` — Generates a funny birthday letter PDF from an HTML template.
-- `apology_letter [recipient_name] [sender_name] [reason]` — Generates a funny apology letter PDF from an HTML template.
-
 ### 6. Moderation (`cogs/moderation.py`)
 
 - `purge [amount]` — Bulk message deletion
@@ -86,6 +81,34 @@ Management for the bot owner.
 ### 9. Sidepipe (`cogs/sidepipe.py`)
 
 Server-specific functions (e.g. `cctvselfie`) for a particular server. **Remove or replace this for custom deployments.**
+
+### 10. Music (`cogs/music/`)
+
+Slash-only voice music: YouTube (URL or search), local **`.mp3` / `.flac`** files, and a **per-guild** queue. Queues are independent per Discord server.
+
+**Commands** (guild only):
+
+- `/play [query]` — YouTube URL or search text; resolves via yt-dlp and enqueues (playlists expand to multiple tracks). Joins your voice channel if needed and starts playback when idle.
+- `/play_local [folder] [filename]` — Queue one file from the local library. **folder** (optional) autocomplete lists subfolders under the library root; leave it on “Library root” for top-level files. **filename** autocomplete lists `.mp3` and `.flac` files in the selected folder.
+- `/skip` — Skip the current track and play the next.
+- `/pause` / `/resume` — Pause or resume playback.
+- `/queue [page]` — Now playing and upcoming tracks (paginated).
+- `/now_playing` — Current track details.
+- `/clear` — Remove **upcoming** tracks only; does **not** stop the track that is currently playing.
+- `/disconnect` — Stop, clear the queue, and leave voice.
+
+**Behavior**
+
+- **Idle disconnect**: If the voice channel has no non-bot members for **5 minutes**, the bot disconnects and clears queue/state for that guild.
+- **Permissions**: The bot needs **Connect** and **Speak** in the target voice channel.
+
+**Requirements**
+
+- **FFmpeg** installed on the host (PATH); Docker image installs it via `apt`.
+- Python packages: `PyNaCl` (voice), `davey` (Discord DAVE voice encryption; required alongside PyNaCl for voice connections on current discord.py), `yt-dlp` (YouTube), plus `discord.py` (see `requirements.txt`).
+- **`voice_states` intent** is enabled in `bot.py` so the bot can detect when a voice channel has no human users (idle disconnect).
+
+**Command sync**: After adding or changing this cog, run `python refreshcmds.py` (or the owner `sync` command) so slash commands update in Discord.
 
 ---
 
@@ -122,12 +145,17 @@ Server-specific functions (e.g. `cctvselfie`) for a particular server. **Remove 
 | `SHODAN_KEY`         | Yes      | Shodan API key (required for Shodan features)  |
 | `HASS_URL`           | No       | [Sidepipe] Home Assistant server URL           |
 | `HASS_TOKEN`         | No       | [Sidepipe] Home Assistant API token            |
+| `MUSIC_LOCAL_DIR`    | No       | [Music] Root directory for `/play_local` (`.mp3` / `.flac`; default: `music_library` at repo root) |
 
 *AI features (gemini/wizard/sd) need `GEMINI_KEYS`, but rest of the bot will run without; Shodan command requires `SHODAN_KEY`.
 
 ### Dependencies
 
 - `discord.py` — Discord API wrapper
+- `PyNaCl` — Voice encryption (required for voice/music)
+- `davey` — Discord DAVE protocol (required for voice with current discord.py; install or you get `RuntimeError: davey library needed in order to use voice`)
+- `yt-dlp` — YouTube extraction for `/play`
+- **FFmpeg** — System binary for audio decode/transcode (not installed via pip; required for music)
 - `aiohttp` — Async HTTP requests
 - `beautifulsoup4` — HTML parsing utilities
 - `pillow` — Image decoding
@@ -138,6 +166,8 @@ Server-specific functions (e.g. `cctvselfie`) for a particular server. **Remove 
 ## Deployment
 
 ### Docker
+
+The image installs **FFmpeg** for the music cog. To use a host folder of local audio with `/play_local`, mount it and set `MUSIC_LOCAL_DIR` inside the container to that path (see repo `README.md`).
 
 ```bash
 docker build -t neurodivergence:latest .
@@ -151,8 +181,9 @@ docker run -d \
 
 ### Local
 
-```bash
+```
 pip install -r requirements.txt
+# Install FFmpeg (OS package); required for voice/music
 # set env vars, e.g. in .env
 python bot.py
 ```
@@ -176,7 +207,7 @@ python bot.py
 
 ## Extending and Cogs
 
-Create new cogs by subclassing `commands.Cog` and exposing `commands.hybrid_command` or decorator-based command handlers. See any cog (e.g., `cogs/shodan.py`) for examples of:
+Create new cogs by subclassing `commands.Cog` and exposing `commands.hybrid_command`, `discord.app_commands.command`, or other command decorators. Cogs may live in `cogs/name.py` or in `cogs/name/__init__.py` with an `async def setup(bot)` that calls `bot.add_cog(...)`. See `cogs/shodan.py` or `cogs/music/` for examples of:
 
 - Custom `discord.ui.View` for rich interactions (see Shodan for button + retry logic)
 - Robust handling for user permissions, API failures, and async workflow
@@ -196,9 +227,12 @@ Create new cogs by subclassing `commands.Cog` and exposing `commands.hybrid_comm
 - **Bot not responding**: Check permissions, intents, and logs
 - **Shodan command fails**: Ensure `SHODAN_KEY` is set and valid, bot has embed/file/upload permissions, and Shodan API is not rate-limited; check logs
 - **AI/Image generation**: Ensure `GEMINI_KEYS`, `AUTO1111_HOSTS`, or other relevant config is present and valid
+- **Music /play fails or no audio**: Ensure FFmpeg is installed and on `PATH`, `PyNaCl`, **`davey`**, and `yt-dlp` are installed, the bot role can **Connect** and **Speak**, and yt-dlp can reach YouTube; check logs for FFmpeg or yt-dlp errors. If you see `davey library needed in order to use voice`, run `pip install davey` (or add `davey` to `requirements.txt`) and rebuild/restart.
+- **Slash commands missing**: Run `python refreshcmds.py` or the owner `sync` command after cog or command changes
 
 ---
 
 ## License and Contribution
 
 See repo for details. PRs and forks are welcome for learning or self-hosting!
+
