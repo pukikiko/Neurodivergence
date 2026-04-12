@@ -11,6 +11,7 @@ from discord.ext.commands import Context
 
 intents = discord.Intents.default()
 intents.message_content = True
+intents.voice_states = True
 
 # Setup both of the loggers
 
