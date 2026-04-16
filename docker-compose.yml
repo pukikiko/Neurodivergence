@@ -8,6 +8,8 @@ services:
     env_file: .env
     environment:
       - LIBRETRANSLATE_URL=http://libretranslate:5000
+    volumes:
+      - ./music_library:/music_library:rw
 
   libretranslate:
     image: libretranslate/libretranslate

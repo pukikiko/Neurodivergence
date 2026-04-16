@@ -1,46 +1,74 @@
-# THIS NEEDS TO BE REWRITTEN
-
 # Neurodivergence
 
-Freshly rewritten!
+Neurodivergence is a [discord.py](https://github.com/Rapptz/discord.py) bot with a modular cog layout: AI helpers, utilities, moderation, fun commands, optional Shodan integration, and **voice music** (YouTube and local MP3/FLAC with a per-server queue).
 
-A Discord bot with an array of interesting features, this project was my excuse to learn Python.
+Full command and configuration reference: [documentation/BOT_DOCUMENTATION.md](documentation/BOT_DOCUMENTATION.md).
 
-have fun!
+## Requirements
 
-## Running your own instance
+- Python 3.10+
+- **FFmpeg** on the host (required for voice decoding; included in the Docker image)
+- **`davey`** (PyPI) — required by current **discord.py** for voice connections (Discord DAVE), alongside **PyNaCl**. Without it, voice connect raises `davey library needed in order to use voice`.
+- Discord bot token and any optional API keys you enable (see docs)
 
-Before you begin, you will need git and Docker installed to run Neurodivergence, so make sure you have those installed.
+## Running locally
 
-https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
+```bash
+pip install -r requirements.txt
+# Configure environment (at minimum TOKEN and STATUSES JSON for bot.py)
+export TOKEN='your_bot_token'
+export STATUSES='["Hello"]'
+python bot.py
+```
 
-https://docs.docker.com/engine/install/
+Install FFmpeg (e.g. `brew install ffmpeg` on macOS, or your distro’s `ffmpeg` package).
 
-Now, you will need to clone the repo and build the Docker image.
+## Docker
 
-    git clone https://github.com/SWAGNET-Enterprises/Neurodivergence.git
-    cd Neurodivergence
-    docker build -t neurodivergence:latest .
+Build and run:
 
-### Now we can run the bot!
+```bash
+docker build -t neurodivergence:latest .
+docker run -d \
+  -e TOKEN=your_discord_token \
+  -e STATUSES='["Neurodivergence"]' \
+  -e SHODAN_KEY=your_shodan_api_key \
+  --restart unless-stopped \
+  neurodivergence:latest
+```
 
-    docker run -d -e TOKEN=your_discord_token -e GEMINI_KEYS=["your_gemini_api_key", "your_other_gemini_api_key"] -e AUTO1111_HOSTS=["http://host1:7860", "http://host2:7860"] -e LMS_HOSTS=["http://host1:1234", "http://host2:1234"] -e LOGGING_CHANNEL=0123456789012345678 -e STATUSES=["68+% of people fail VORT", "CBT&A costs $3000"] -e GEOWIFI_URL=http://127.0.0.1:5000/geowifi -e HTTP_PROXY=http://100.65.0.1:8888 --restart unless-stopped neurodivergence:latest
+Add other variables from the documentation as needed (`GEMINI_KEYS`, `AUTO1111_HOSTS`, `MUSIC_LOCAL_DIR`, etc.).
 
-Make sure that all environment variables are set up correctly before running the bot, things can go sideways if they are misconfigured.
+### Music library volume (optional)
 
-### Environment Variables
+To use `/play_local` with files on the host, mount a directory and point the bot at it:
 
-| Variable        | Description                                                                                                |
-| --------------- | ---------------------------------------------------------------------------------------------------------- |
-| TOKEN           | Your Discord bot token, obtained here: https://discord.com/developers/applications                         |
-| GEMINI_KEYS     | Your Google Gemini API Keys in list format: ["your_gemini_api_key", "your_other_gemini_api_key"]          |
-| AUTO1111_HOSTS  | Your Automatic1111 Stable Diffusion WebUI hosts in list format: ["http://host1:7860", "http://host2:7860"] |
-| LMS_HOSTS       | Your Automatic1111 LM Studio hosts in list format: ["http://host1:1234", "http://host2:1234"]              |
-| LOGGING_CHANNEL | Your Discord channel used for logging: 0123456789012345678                                                 |
-| STATUSES        | The statuses you want the bot to display in list format: ["68+% of people fail VORT", "CBT&A costs $3000"] |
-| GEOWIFI_URL     | The URL for your GeoWifi API instance, more info: https://github.com/SWAGNET-Enterprises/geowifi-api       |
-| HTTP_PROXY      | The URL of your HTTP proxy used for fetching data: http://100.65.0.1:8888                                  |
+```bash
+docker run -d \
+  -e TOKEN=your_discord_token \
+  -e STATUSES='["Neurodivergence"]' \
+  -e MUSIC_LOCAL_DIR=/data/music_library \
+  -v /path/on/host/mp3s:/data/music_library:ro \
+  --restart unless-stopped \
+  neurodivergence:latest
+```
 
-### The Sidepipe Cog
+## Slash commands
 
-There is a cog inside the cogs folder (sidepipe.py) which contains functions specific to The Sidepipe discord server, this cog is only included for code reference and should be deleted before starting your own instance, unless you wish to modify it and use it for your own purposes ;)
+After changing commands, sync the application command tree (owner `sync` in the bot, or `python refreshcmds.py`). See [documentation/BOT_DOCUMENTATION.md](documentation/BOT_DOCUMENTATION.md).
+
+## Environment variables (summary)
+
+| Variable | Description |
+|----------|-------------|
+| `TOKEN` | Discord bot token ([Discord Developer Portal](https://discord.com/developers/applications)) |
+| `STATUSES` | JSON array of status strings for rotation |
+| `MUSIC_LOCAL_DIR` | Optional. Root directory for `/play_local` (`.mp3` / `.flac`, subfolders supported; default: `./music_library`) |
+| `GEMINI_KEYS` | JSON array of Gemini API keys (AI features) |
+| `AUTO1111_HOSTS` | JSON array of Stable Diffusion WebUI URLs |
+| `LMS_HOSTS` | JSON array of LM Studio URLs |
+| `LOGGING_CHANNEL` | Channel ID for command logging |
+| `SHODAN_KEY` | Shodan API key (Shodan cog) |
+| `GEOWIFI_URL`, `HTTP_PROXY`, `LIBRETRANSLATE_URL`, `HASS_*` | Optional integrations (see full docs) |
+
+The **Sidepipe** cog (`cogs/sidepipe.py`) is server-specific; remove or replace it for your own deployment.

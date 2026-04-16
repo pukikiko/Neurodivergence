@@ -99,15 +99,20 @@ def ensure_env_defaults() -> None:
 
 async def load_all_cogs(bot: commands.Bot, cogs_dir: Path) -> None:
     """
-    Loads every `*.py` file inside the cogs directory as an extension.
+    Loads every cog package or `*.py` cog module inside the cogs directory.
     """
     if not cogs_dir.exists():
         raise FileNotFoundError(f"cogs directory not found: {cogs_dir}")
 
-    for file in sorted(cogs_dir.iterdir()):
-        if file.is_file() and file.suffix == ".py" and not file.name.startswith("_"):
-            ext = f"cogs.{file.stem}"
+    for path in sorted(cogs_dir.iterdir()):
+        if path.is_file() and path.suffix == ".py" and not path.name.startswith("_"):
+            ext = f"cogs.{path.stem}"
             await bot.load_extension(ext)
+        elif path.is_dir() and not path.name.startswith("_"):
+            init_py = path / "__init__.py"
+            if init_py.is_file():
+                ext = f"cogs.{path.name}"
+                await bot.load_extension(ext)
 
 
 def build_parser() -> argparse.ArgumentParser:
