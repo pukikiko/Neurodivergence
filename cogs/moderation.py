@@ -29,7 +29,7 @@ class Moderation(commands.Cog, name="moderation"):
         purged_messages = await target_channel.purge(limit=limit)
         deleted = len(purged_messages) if channel else len(purged_messages) - 1
         embed = discord.Embed(description=f"**{context.author}** cleared **{deleted}** messages in {target_channel.mention}!")
-        await context.reply(embed=embed)
+        await context.send(embed=embed)
 
     @commands.hybrid_command(
         name="purgekeywords",
@@ -50,23 +50,30 @@ class Moderation(commands.Cog, name="moderation"):
         
         keywords_list = [k.strip().lower() for k in keywords.split(',') if k.strip()]
 
+        keyword_count = 0
+
         def check(message):
+            nonlocal keyword_count
             if is_same_channel:
                 if context.message and message.id == context.message.id:
                     return True
                 if reply_msg and message.id == reply_msg.id:
                     return True
-            return any(keyword in message.content.lower() for keyword in keywords_list)
+            if any(keyword in message.content.lower() for keyword in keywords_list):
+                if keyword_count < amount:
+                    keyword_count += 1
+                    return True
+            return False
 
-        limit = amount + 2 if is_same_channel else amount
-        purged_messages = await target_channel.purge(limit=limit, check=check)
+        search_limit = 200 if is_same_channel else 200
+        purged_messages = await target_channel.purge(limit=search_limit, check=check)
         
         if is_same_channel:
             deleted_count = len([m for m in purged_messages if m.id not in (getattr(context.message, 'id', None), getattr(reply_msg, 'id', None))])
         else:
             deleted_count = len(purged_messages)
         embed = discord.Embed(description=f"**{context.author}** cleared **{deleted_count}** messages in {target_channel.mention}!")
-        await context.reply(embed=embed)
+        await context.send(embed=embed)
 
     @commands.hybrid_command(
         name="preemptban",
