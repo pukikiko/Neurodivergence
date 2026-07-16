@@ -24,6 +24,31 @@ class Moderation(commands.Cog, name="moderation"):
         await context.channel.send(embed=embed)
 
     @commands.hybrid_command(
+        name="purgekeywords",
+        description="Delete a number of messages containing specified keywords (comma-separated).",
+    )
+    @commands.has_guild_permissions(manage_messages=True)
+    @commands.bot_has_permissions(manage_messages=True)
+    async def purgekeywords(self, context: Context, amount: int, *, keywords: str) -> None:
+        embed = discord.Embed(title="Deleting messages...", description="Please wait...")
+        reply_msg = await context.reply(embed=embed)
+        
+        keywords_list = [k.strip().lower() for k in keywords.split(',') if k.strip()]
+
+        def check(message):
+            if context.message and message.id == context.message.id:
+                return True
+            if reply_msg and message.id == reply_msg.id:
+                return True
+            return any(keyword in message.content.lower() for keyword in keywords_list)
+
+        purged_messages = await context.channel.purge(limit=amount + 1, check=check)
+        
+        deleted_count = len([m for m in purged_messages if m.id not in (getattr(context.message, 'id', None), getattr(reply_msg, 'id', None))])
+        embed = discord.Embed(description=f"**{context.author}** cleared **{deleted_count}** messages!")
+        await context.channel.send(embed=embed)
+
+    @commands.hybrid_command(
         name="preemptban",
         description="Pre-emptively bans a user before they join the server.",
     )

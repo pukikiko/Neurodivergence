@@ -1,18 +1,7 @@
 services:
   bot:
-    build: .
+    image: ghcr.io/pukikiko/neurodivergence-bot:latest
     restart: unless-stopped
-    depends_on:
-      libretranslate:
-        condition: service_started
     env_file: .env
-    environment:
-      - LIBRETRANSLATE_URL=http://libretranslate:5000
     volumes:
       - ./music_library:/music_library:rw
-
-  libretranslate:
-    image: libretranslate/libretranslate
-    restart: unless-stopped
-    environment:
-      - LT_LOAD_ONLY=en,ar,az,bn,bg,ca,zh,zt,cs,da,nl,eo,et,fi,fr,gl,de,el,he,hi,hu,id,ga,it,ja,ko,ky,lv,lt,ms,nb,fa,pl,pt,pb,ro,ru,sk,sl,es,sq,sv,tl,th,tr,uk,ur,vi,eu
