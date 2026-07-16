@@ -47,31 +47,40 @@ class Moderation(commands.Cog, name="moderation"):
         is_same_channel = target_channel == context.channel
         embed = discord.Embed(title="Deleting messages...", description="Please wait...")
         reply_msg = await context.reply(embed=embed)
-        
+
         keywords_list = [k.strip().lower() for k in keywords.split(',') if k.strip()]
 
-        keyword_count = 0
-
-        def check(message):
-            nonlocal keyword_count
-            if is_same_channel:
-                if context.message and message.id == context.message.id:
-                    return True
-                if reply_msg and message.id == reply_msg.id:
-                    return True
-            if any(keyword in message.content.lower() for keyword in keywords_list):
-                if keyword_count < amount:
-                    keyword_count += 1
-                    return True
-            return False
-
-        search_limit = 200 if is_same_channel else 200
-        purged_messages = await target_channel.purge(limit=search_limit, check=check)
-        
+        skip_ids = set()
         if is_same_channel:
-            deleted_count = len([m for m in purged_messages if m.id not in (getattr(context.message, 'id', None), getattr(reply_msg, 'id', None))])
-        else:
-            deleted_count = len(purged_messages)
+            if context.message is not None:
+                skip_ids.add(context.message.id)
+            if reply_msg is not None:
+                skip_ids.add(reply_msg.id)
+
+        deleted_count = 0
+        max_scan = min(max(amount * 50, 2000), 10000)
+
+        async for message in target_channel.history(limit=max_scan):
+            if deleted_count >= amount:
+                break
+            if message.id in skip_ids:
+                continue
+            if not any(keyword in message.content.lower() for keyword in keywords_list):
+                continue
+            try:
+                await message.delete()
+            except discord.HTTPException:
+                continue
+            deleted_count += 1
+
+        if is_same_channel:
+            for target in (reply_msg, context.message):
+                try:
+                    if target is not None:
+                        await target.delete()
+                except discord.HTTPException:
+                    pass
+
         embed = discord.Embed(description=f"**{context.author}** cleared **{deleted_count}** messages in {target_channel.mention}!")
         await context.send(embed=embed)
 
