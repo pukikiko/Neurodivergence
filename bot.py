@@ -277,6 +277,13 @@ class DiscordBot(commands.Bot):
                 color=0xE02B2B,
             )
             await context.send(embed=embed)
+        elif isinstance(error, commands.BadArgument):
+            embed = discord.Embed(
+                title="Error!",
+                description=str(error),
+                color=0xE02B2B,
+            )
+            await context.send(embed=embed)
         else:
             raise error
 
