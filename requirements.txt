@@ -1,7 +1,4 @@
 discord.py
-PyNaCl
-davey
-yt-dlp
 aiohttp
 beautifulsoup4
 pillow
