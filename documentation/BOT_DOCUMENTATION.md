@@ -23,9 +23,11 @@ Neurodivergence is a feature-rich Discord bot built with Python using the `disco
 
 ### 2. AI (`cogs/ai.py`)
 
-- `gemini [prompt]` — Google Gemini chat (with attachments/context)
-- `wizard [prompt]` — Wizard Vicuna (via LM Studio)
+- `gemini [prompt]` — Chat with the configured OpenAI-compatible LLM endpoint (with attachments/context)
+- `wizard [prompt]` — Same endpoint using the wizard persona
 - `sd` — Generate images via Stable Diffusion
+
+The LLM commands use a single endpoint (`OPENAI_BASE_URL`), a single API key (`OPENAI_API_KEY`), and a single model (`OPENAI_MODEL`). There is no key rotation or host failover; if the configured endpoint fails, the request fails.
 
 ### 3. Utility (`cogs/utility.py`)
 
@@ -134,9 +136,10 @@ Slash-only voice music: YouTube (URL or search), local **`.mp3` / `.flac`** file
 | Variable             | Required | Description                                    |
 |----------------------|----------|------------------------------------------------|
 | `TOKEN`              | Yes      | Discord bot token                              |
-| `GEMINI_KEYS`        | Yes*     | [AI] Gemini API keys (JSON array string)       |
+| `OPENAI_BASE_URL`    | Yes*     | [AI] OpenAI-compatible endpoint base URL (usually ends in `/v1`) |
+| `OPENAI_API_KEY`     | No       | [AI] API key for the endpoint (may be empty for local servers)  |
+| `OPENAI_MODEL`       | Yes*     | [AI] Model name to request from the endpoint                    |
 | `AUTO1111_HOSTS`     | No       | [AI] Stable Diffusion host URLs                |
-| `LMS_HOSTS`          | No       | [AI] LM Studio URL list                        |
 | `LOGGING_CHANNEL`    | No       | Command log channel                            |
 | `STATUSES`           | No       | Status rotation list                           |
 | `GEOWIFI_URL`        | No       | GeoWifi API URL                                |
@@ -147,7 +150,7 @@ Slash-only voice music: YouTube (URL or search), local **`.mp3` / `.flac`** file
 | `HASS_TOKEN`         | No       | [Sidepipe] Home Assistant API token            |
 | `MUSIC_LOCAL_DIR`    | No       | [Music] Root directory for `/play_local` (`.mp3` / `.flac`; default: `music_library` at repo root) |
 
-*AI features (gemini/wizard/sd) need `GEMINI_KEYS`, but rest of the bot will run without; Shodan command requires `SHODAN_KEY`.
+*LLM features (`gemini`/`wizard`) need `OPENAI_BASE_URL` and `OPENAI_MODEL`; `sd` needs `AUTO1111_HOSTS`. The rest of the bot will run without them; the Shodan command requires `SHODAN_KEY`.
 
 ### Dependencies
 
@@ -226,7 +229,7 @@ Create new cogs by subclassing `commands.Cog` and exposing `commands.hybrid_comm
 
 - **Bot not responding**: Check permissions, intents, and logs
 - **Shodan command fails**: Ensure `SHODAN_KEY` is set and valid, bot has embed/file/upload permissions, and Shodan API is not rate-limited; check logs
-- **AI/Image generation**: Ensure `GEMINI_KEYS`, `AUTO1111_HOSTS`, or other relevant config is present and valid
+- **AI/Image generation**: Ensure `OPENAI_BASE_URL`, `OPENAI_MODEL`, `AUTO1111_HOSTS`, or other relevant config is present and valid
 - **Music /play fails or no audio**: Ensure FFmpeg is installed and on `PATH`, `PyNaCl`, **`davey`**, and `yt-dlp` are installed, the bot role can **Connect** and **Speak**, and yt-dlp can reach YouTube; check logs for FFmpeg or yt-dlp errors. If you see `davey library needed in order to use voice`, run `pip install davey` (or add `davey` to `requirements.txt`) and rebuild/restart.
 - **Slash commands missing**: Run `python refreshcmds.py` or the owner `sync` command after cog or command changes
 

@@ -84,15 +84,12 @@ def ensure_env_defaults() -> None:
     Some cogs read env vars at import time (module top-level).
 
     In particular, `cogs/ai.py` does:
-      auto1111_hosts = json.loads(os.environ['AUTO1111_HOSTS'])
-      lms_hosts = json.loads(os.environ['LMS_HOSTS'])
+      auto1111_hosts = json.loads(os.environ.get("AUTO1111_HOSTS", "[]"))
 
-    So we provide safe defaults here to avoid KeyError/JSON errors when you only
-    want to sync commands.
+    So we provide a safe default here to avoid KeyError/JSON errors when you
+    only want to sync commands.
     """
     os.environ.setdefault("AUTO1111_HOSTS", "[]")
-    os.environ.setdefault("LMS_HOSTS", "[]")
-    os.environ.setdefault("GEMINI_KEYS", "[]")
     os.environ.setdefault("STATUSES", json.dumps(["Neurodivergence"]))
     os.environ.setdefault("MINECRAFT_SERVERS", "[]")
 

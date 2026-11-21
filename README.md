@@ -48,11 +48,14 @@ After changing commands, sync the application command tree (owner `sync` in the 
 |----------|-------------|
 | `TOKEN` | Discord bot token ([Discord Developer Portal](https://discord.com/developers/applications)) |
 | `STATUSES` | JSON array of status strings for rotation |
-| `GEMINI_KEYS` | JSON array of Gemini API keys (AI features) |
+| `OPENAI_BASE_URL` | Base URL of an OpenAI-compatible endpoint (e.g. `http://localhost:1234/v1`) |
+| `OPENAI_API_KEY` | API key for that endpoint (optional for local endpoints) |
+| `OPENAI_MODEL` | Model name to request from the endpoint |
 | `AUTO1111_HOSTS` | JSON array of Stable Diffusion WebUI URLs |
-| `LMS_HOSTS` | JSON array of LM Studio URLs |
 | `LOGGING_CHANNEL` | Channel ID for command logging |
 | `SHODAN_KEY` | Shodan API key (Shodan cog) |
 | `HASS_*` | Optional integrations (see full docs) |
+
+AI commands use the single `OPENAI_BASE_URL` / `OPENAI_API_KEY` / `OPENAI_MODEL` configuration; there is no key or host failover.
 
 The **Sidepipe** cog (`cogs/sidepipe.py`) is server-specific; remove or replace it for your own deployment.
